@@ -187,7 +187,7 @@ export default async function ToolDetailPage({ params }: Props) {
             <section className="mb-8">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">বিশেষজ্ঞ মতামত</h2>
               <div className="p-5 bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-600 rounded-r-xl">
-                <p className="text-gray-700 dark:text-gray-300 leading-relaxed italic">"{tool.expert_verdict_bn}"</p>
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed italic">&ldquo;{tool.expert_verdict_bn}&rdquo;</p>
                 <p className="text-sm text-blue-600 font-medium mt-2">— BanglaAIHub টিম</p>
               </div>
             </section>

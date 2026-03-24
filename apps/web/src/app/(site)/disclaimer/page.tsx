@@ -20,7 +20,7 @@ export default function DisclaimerPage() {
         </section>
         <section>
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">আয়ের দাবি</h2>
-          <p>"আয় করুন" section-এর তথ্য শিক্ষামূলক। প্রকৃত আয় ব্যক্তি, প্রচেষ্টা ও বাজারের উপর নির্ভর করে।</p>
+          <p>&ldquo;আয় করুন&rdquo; section-এর তথ্য শিক্ষামূলক। প্রকৃত আয় ব্যক্তি, প্রচেষ্টা ও বাজারের উপর নির্ভর করে।</p>
         </section>
       </div>
     </div>
