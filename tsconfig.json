@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "lib": ["ES2020"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "outDir": "./dist",
+    "rootDir": ".",
+    "paths": {
+      "@banglaAIhub/*": ["./packages/*/src"]
+    }
+  },
+  "include": ["scripts/**/*", "workers/**/*"],
+  "exclude": ["node_modules", "dist", "apps"]
+}

@@ -1,0 +1,45 @@
+name: OpenClaw Auto Publish
+
+on:
+  schedule:
+    # Runs 3 times daily — actual timing controlled by site_settings in DB
+    # These are UTC times (BD = UTC+6)
+    - cron: '0 2 * * *'   # 08:00 AM BD
+    - cron: '0 7 * * *'   # 01:00 PM BD
+    - cron: '0 15 * * *'  # 09:00 PM BD
+  workflow_dispatch:       # Manual trigger from GitHub UI
+
+jobs:
+  run-openclaw:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install --prefix scripts || npm install
+
+      - name: Install ts-node
+        run: npm install -g ts-node typescript @types/node
+
+      - name: Run OpenClaw Pipeline
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          PRODUCTHUNT_TOKEN: ${{ secrets.PRODUCTHUNT_TOKEN }}
+        run: npx ts-node --project tsconfig.json scripts/run-auto-pipeline.ts
+
+      - name: Health check
+        if: always()
+        run: |
+          echo "Pipeline finished at $(date)"
+          curl -sf "${{ secrets.SITE_URL }}/api/health" || echo "Health check failed"

@@ -1,0 +1,21 @@
+name: Retry Failed Social Posts
+
+on:
+  schedule:
+    - cron: '30 3 * * *'  # Daily 09:30 AM BD
+  workflow_dispatch:
+
+jobs:
+  retry-failed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm install -g ts-node typescript
+      - name: Retry failed posts
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: npx ts-node scripts/retry-failed-social.ts

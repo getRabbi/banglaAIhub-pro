@@ -1,0 +1,22 @@
+{
+  "name": "banglaAIhub",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*", "workers/*"],
+  "scripts": {
+    "dev:web": "cd apps/web && npm run dev",
+    "dev:admin": "cd apps/admin && npm run dev",
+    "build:web": "cd apps/web && npm run build",
+    "build:admin": "cd apps/admin && npm run build",
+    "openclaw:run": "npx ts-node scripts/run-auto-pipeline.ts",
+    "openclaw:manual": "npx ts-node scripts/run-manual-publish.ts",
+    "links:check": "npx ts-node scripts/check-affiliate-links.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.43.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5.3.0",
+    "ts-node": "^10.9.0"
+  }
+}
