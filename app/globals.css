@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root { --bg: #0a0e1a; --card: #161b22; --card-h: #1c2333; --border: #21262d; --t1: #e6edf3; --t2: #8b949e; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg); color: var(--t1); -webkit-font-smoothing: antialiased; }
+h1,h2,h3,h4,h5,h6 { font-family: 'Hind Siliguri', sans-serif; font-weight: 700; }
+.font-display { font-family: 'Space Grotesk', sans-serif; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::selection { background: rgba(37,99,235,0.3); color: white; }
+
+.prose-dark h2 { font-size:1.5rem; font-weight:700; color:white; margin-top:2.5rem; margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:1px solid var(--border); }
+.prose-dark h3 { font-size:1.25rem; font-weight:600; color:white; margin-top:2rem; margin-bottom:0.75rem; }
+.prose-dark p { color:#c9d1d9; line-height:1.8; margin-bottom:1.25rem; }
+.prose-dark strong { color:white; }
+.prose-dark a { color:#58a6ff; text-decoration:none; }
+.prose-dark a:hover { text-decoration:underline; }
+.prose-dark ul { list-style:disc; padding-left:1.5rem; margin-bottom:1.25rem; }
+.prose-dark li { color:#c9d1d9; margin-bottom:0.5rem; line-height:1.7; }
+.prose-dark blockquote { border-left:3px solid #8b5cf6; background:rgba(139,92,246,0.05); padding:0.75rem 1rem; border-radius:0 0.5rem 0.5rem 0; margin-bottom:1.25rem; }
+
+.scrollbar-hide::-webkit-scrollbar { display:none; }
+.scrollbar-hide { -ms-overflow-style:none; scrollbar-width:none; }
+.gradient-text { background:linear-gradient(135deg,#2563eb,#06b6d4,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.glass { background:rgba(22,27,34,0.8); backdrop-filter:blur(12px); border:1px solid rgba(33,38,45,0.8); }
