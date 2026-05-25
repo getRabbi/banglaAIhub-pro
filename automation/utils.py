@@ -19,14 +19,45 @@ def content_hash(text: str) -> str:
     return hashlib.md5(text.strip().lower().encode()).hexdigest()
 
 
-def is_duplicate(supabase: Client, hash_val: str) -> bool:
-    result = (
-        supabase.table("blog_posts")
-        .select("id")
-        .eq("content_hash", hash_val)
-        .execute()
-    )
-    return len(result.data) > 0
+def is_duplicate(supabase: Client, hash_val: str, post: dict | None = None) -> bool:
+    def exists_by(field: str, value: str) -> bool:
+        try:
+            result = (
+                supabase.table("blog_posts")
+                .select("id")
+                .eq(field, value)
+                .execute()
+            )
+            return len(result.data) > 0
+        except Exception as e:
+            if field in str(e) or "does not exist" in str(e):
+                return False
+            raise
+
+    try:
+        result = (
+            supabase.table("blog_posts")
+            .select("id")
+            .eq("content_hash", hash_val)
+            .execute()
+        )
+        return len(result.data) > 0
+    except Exception as e:
+        if "content_hash" not in str(e):
+            raise
+
+    if not post:
+        return False
+
+    source_url = post.get("source_url")
+    if source_url and exists_by("source_url", source_url):
+        return True
+
+    original_title = post.get("original_title")
+    if original_title:
+        return exists_by("original_title", original_title)
+
+    return False
 
 
 def send_telegram(message: str):

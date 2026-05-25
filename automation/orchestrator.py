@@ -23,6 +23,12 @@ from agents import (
     check_telegram_commands,
 )
 
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 
 def run_pipeline():
     start = datetime.now()
@@ -72,7 +78,7 @@ def run_pipeline():
     for post in all_posts:
         body = post.get("original_body", post.get("original_title", ""))
         h = content_hash(body)
-        if is_duplicate(supabase, h):
+        if is_duplicate(supabase, h, post):
             stats["dupes"] += 1
             continue
         unique.append(post)

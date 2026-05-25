@@ -1,8 +1,37 @@
 """Blog Publisher — saves to Supabase with category, read time, related posts."""
 
+import re
 from datetime import datetime, timezone
 from utils import get_supabase, slugify, content_hash, estimate_read_time, detect_category
 from config import BLOG_BASE_URL
+
+
+def _missing_column_name(error: Exception) -> str | None:
+    message = str(error)
+    patterns = [
+        r"column blog_posts\.([a-zA-Z0-9_]+) does not exist",
+        r"Could not find the '([a-zA-Z0-9_]+)' column",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, message)
+        if match:
+            return match.group(1)
+    return None
+
+
+def _insert_blog_post(supabase, record: dict):
+    payload = dict(record)
+    for _ in range(10):
+        try:
+            return supabase.table("blog_posts").insert(payload).execute()
+        except Exception as e:
+            missing = _missing_column_name(e)
+            if missing and missing in payload:
+                print(f"[WARN] Blog: live schema missing '{missing}', retrying without it.")
+                payload.pop(missing, None)
+                continue
+            raise
+    raise RuntimeError("Could not insert blog post after removing unsupported columns.")
 
 
 def publish_to_blog(original: dict, bangla: dict) -> dict | None:
@@ -52,7 +81,7 @@ def publish_to_blog(original: dict, bangla: dict) -> dict | None:
     }
 
     try:
-        result = supabase.table("blog_posts").insert(record).execute()
+        result = _insert_blog_post(supabase, record)
         if result.data:
             post = result.data[0]
             post["blog_url"] = blog_url  # computed, not in DB
