@@ -1,6 +1,7 @@
 import { createServerClient } from "@/lib/supabase";
 import Link from "next/link";
 import { PRICING_LABELS, BADGE_LABELS, formatBanglaDateShort } from "@/lib/constants";
+import { normalizeBlogPosts, normalizeTools } from "@/lib/schema-normalizers";
 
 export const revalidate = 1800;
 
@@ -14,12 +15,14 @@ const BLOG_CAT_BADGE: Record<string, { emoji: string; label: string; cls: string
 export default async function HomePage() {
   const sb = createServerClient();
 
-  const [{ data: featuredTools }, { data: recentBlog }, { data: categories }, { data: deals }] = await Promise.all([
-    sb.from("tools").select("*").eq("is_active", true).order("view_count", { ascending: false }).limit(8),
-    sb.from("blog_posts").select("id, bangla_title, bangla_hook, blog_slug, category, read_time_min, view_count, thumbnail_url, published_at").eq("status", "published").order("published_at", { ascending: false }).limit(6),
-    sb.from("categories").select("*").eq("is_active", true).order("sort_order").limit(12),
+  const [{ data: rawFeaturedTools }, { data: rawRecentBlog }, { data: categories }, { data: deals }] = await Promise.all([
+    sb.from("tools").select("*, categories(name_bn, slug)").eq("status", "published").order("view_count", { ascending: false }).limit(8),
+    sb.from("blog_posts").select("id, title, slug, excerpt_bn, source_platform, category_id, tags, reading_time_minutes, view_count, thumbnail_url, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").order("published_at", { ascending: false }).limit(6),
+    sb.from("categories").select("*").order("sort_order").limit(12),
     sb.from("deals").select("*, tools(name, logo_url)").eq("is_active", true).order("created_at", { ascending: false }).limit(4),
   ]);
+  const featuredTools = normalizeTools(rawFeaturedTools);
+  const recentBlog = normalizeBlogPosts(rawRecentBlog);
 
   return (
     <div className="min-h-screen">

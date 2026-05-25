@@ -3,6 +3,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+def _env(name: str, default: str = "") -> str:
+    return os.getenv(name) or default
+
 # ─── Reddit API ───
 REDDIT_CLIENT_ID = os.getenv("REDDIT_CLIENT_ID", "")
 REDDIT_CLIENT_SECRET = os.getenv("REDDIT_CLIENT_SECRET", "")
@@ -69,12 +73,28 @@ HN_RELEVANT_KEYWORDS = [
 PH_API_TOKEN = os.getenv("PH_API_TOKEN", "")
 PH_POSTS_PER_DAY = 5
 
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
+GITHUB_MIN_STARS = int(_env("GITHUB_MIN_STARS", "500"))
+GITHUB_FETCH_COUNT = int(_env("GITHUB_FETCH_COUNT", "20"))
+GITHUB_TOPICS = [
+    t.strip()
+    for t in _env(
+        "GITHUB_TOPICS",
+        "llm,ai-agent,rag,automation,developer-tools,local-first,productivity",
+    ).split(",")
+    if t.strip()
+]
+
 # ─── OpenAI API ───
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")  # gpt-4o, gpt-4o-mini, gpt-4-turbo
+if OPENAI_API_KEY in {"sk-your-key", "your-openai-key", "your-openai-api-key"}:
+    OPENAI_API_KEY = ""
+OPENAI_MODEL = _env("OPENAI_MODEL", "gpt-4o-mini")  # gpt-4o, gpt-4o-mini, gpt-4-turbo
+OPENAI_BASE_URL = _env("OPENAI_BASE_URL", "https://api.openai.com/v1/chat/completions")
+REWRITE_PROVIDER = _env("REWRITE_PROVIDER", "auto").lower()
 
 # ─── Supabase ───
-SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+SUPABASE_URL = os.getenv("SUPABASE_URL") or os.getenv("NEXT_PUBLIC_SUPABASE_URL", "")
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
 
 # ─── Facebook Page API ───

@@ -2,20 +2,22 @@ import { createServerClient } from "@/lib/supabase";
 import Link from "next/link";
 import { Metadata } from "next";
 import { BLOG_CATEGORIES, formatBanglaDateShort } from "@/lib/constants";
+import { normalizeBlogPosts } from "@/lib/schema-normalizers";
 
 export const metadata: Metadata = { title: "ব্লগ" };
 export const revalidate = 1800;
 
 export default async function BlogPage({ searchParams }: { searchParams: { category?: string; tag?: string } }) {
   const sb = createServerClient();
-  let query = sb.from("blog_posts").select("id, bangla_title, bangla_hook, blog_slug, source, category, tags, read_time_min, view_count, thumbnail_url, published_at").eq("status", "published").order("published_at", { ascending: false }).limit(30);
-  if (searchParams.category) query = query.eq("category", searchParams.category);
+  let query = sb.from("blog_posts").select("id, title, slug, excerpt_bn, source_platform, category_id, tags, reading_time_minutes, view_count, thumbnail_url, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").order("published_at", { ascending: false }).limit(60);
   if (searchParams.tag) query = query.contains("tags", [searchParams.tag]);
 
-  const [{ data: posts }, { data: trending }] = await Promise.all([
+  const [{ data: rawPosts }, { data: rawTrending }] = await Promise.all([
     query,
-    sb.from("blog_posts").select("id, bangla_title, blog_slug, category, view_count, read_time_min").eq("status", "published").order("view_count", { ascending: false }).limit(5),
+    sb.from("blog_posts").select("id, title, slug, excerpt_bn, category_id, tags, source_platform, view_count, reading_time_minutes, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").order("view_count", { ascending: false }).limit(5),
   ]);
+  const posts = normalizeBlogPosts(rawPosts).filter((post) => !searchParams.category || post.category === searchParams.category);
+  const trending = normalizeBlogPosts(rawTrending);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">

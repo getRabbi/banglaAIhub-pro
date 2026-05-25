@@ -13,6 +13,7 @@ from agents import (
     scrape_reddit,
     scrape_x,
     scrape_hackernews,
+    scrape_github_repos,
     scrape_producthunt,
     rewrite_to_bangla,
     publish_to_blog,
@@ -50,6 +51,7 @@ def run_pipeline():
         ("Reddit", scrape_reddit),
         ("X/Twitter", scrape_x),
         ("Hacker News", scrape_hackernews),
+        ("GitHub OSS", scrape_github_repos),
         ("Product Hunt", scrape_producthunt),
     ]
 

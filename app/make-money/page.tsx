@@ -2,10 +2,12 @@ import { createServerClient } from "@/lib/supabase";
 import Link from "next/link";
 import { Metadata } from "next";
 import { formatBanglaDateShort } from "@/lib/constants";
+import { normalizeBlogPosts } from "@/lib/schema-normalizers";
 export const metadata: Metadata = { title: "অনলাইনে আয় করুন" };
 export const revalidate = 1800;
 export default async function MakeMoneyPage() {
-  const { data: posts } = await createServerClient().from("blog_posts").select("id, bangla_title, bangla_hook, blog_slug, read_time_min, view_count, published_at").eq("status", "published").eq("category", "money-making").order("published_at", { ascending: false }).limit(20);
+  const { data } = await createServerClient().from("blog_posts").select("id, title, slug, excerpt_bn, source_platform, category_id, tags, reading_time_minutes, view_count, thumbnail_url, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").order("published_at", { ascending: false }).limit(50);
+  const posts = normalizeBlogPosts(data).filter((post) => post.category === "money-making").slice(0, 20);
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
       <div className="glass-card glow-orange p-8 mb-10 relative overflow-hidden">

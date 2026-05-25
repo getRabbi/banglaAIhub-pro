@@ -54,8 +54,8 @@ def is_duplicate(supabase: Client, hash_val: str, post: dict | None = None) -> b
         return True
 
     original_title = post.get("original_title")
-    if original_title:
-        return exists_by("original_title", original_title)
+    if original_title and (exists_by("original_title", original_title) or exists_by("source_title", original_title)):
+        return True
 
     return False
 

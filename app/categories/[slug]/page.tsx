@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Metadata } from "next";
 import { PRICING_LABELS, BADGE_LABELS } from "@/lib/constants";
+import { normalizeTools } from "@/lib/schema-normalizers";
 
 export const revalidate = 3600;
 
@@ -13,10 +14,11 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
 export default async function CategoryDetail({ params }: { params: { slug: string } }) {
   const sb = createServerClient();
-  const { data: category } = await sb.from("categories").select("*").eq("slug", params.slug).eq("is_active", true).single();
+  const { data: category } = await sb.from("categories").select("*").eq("slug", params.slug).single();
   if (!category) notFound();
 
-  const { data: tools } = await sb.from("tools").select("*").eq("category_id", category.id).eq("is_active", true).order("view_count", { ascending: false });
+  const { data: rawTools } = await sb.from("tools").select("*").eq("category_id", category.id).eq("status", "published").order("view_count", { ascending: false });
+  const tools = normalizeTools(rawTools);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">

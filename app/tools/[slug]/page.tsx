@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Metadata } from "next";
 import { PRICING_LABELS, BADGE_LABELS } from "@/lib/constants";
+import { normalizeTool, normalizeTools } from "@/lib/schema-normalizers";
 
 export const revalidate = 3600;
 
@@ -20,8 +21,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
 export default async function ToolDetail({ params }: { params: { slug: string } }) {
   const sb = createServerClient();
-  const { data: tool } = await sb.from("tools").select("*, categories(name_bn, slug, icon)").eq("slug", params.slug).eq("is_active", true).single();
-  if (!tool) notFound();
+  const { data: rawTool } = await sb.from("tools").select("*, categories(name_bn, slug, icon)").eq("slug", params.slug).eq("status", "published").single();
+  if (!rawTool) notFound();
+  const tool = normalizeTool(rawTool);
 
   try {
     await sb.rpc("increment_view", { tbl: "tools", slug_val: params.slug });
@@ -34,8 +36,8 @@ export default async function ToolDetail({ params }: { params: { slug: string } 
   let alternatives: any[] = [];
   if (altLinks && altLinks.length > 0) {
     const ids = altLinks.map((a: any) => a.alternative_id);
-    const { data } = await sb.from("tools").select("name, slug, logo_url, pricing, tagline_bn").in("id", ids).eq("is_active", true);
-    alternatives = data || [];
+    const { data } = await sb.from("tools").select("name, slug, logo_url, pricing_type, tagline_bn, status").in("id", ids).eq("status", "published");
+    alternatives = normalizeTools(data);
   }
 
   const faq = tool.faq || [];

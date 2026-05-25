@@ -2,13 +2,16 @@ import { createServerClient } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import BlogPostClient from "./BlogPostClient";
+import { normalizeBlogPost, normalizeBlogPosts } from "@/lib/schema-normalizers";
 
 export const revalidate = 3600;
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const sb = createServerClient();
-  const { data: post } = await sb.from("blog_posts").select("bangla_title, meta_description, blog_slug, category").eq("blog_slug", params.slug).eq("status", "published").single();
-  if (!post) return { title: "পোস্ট পাওয়া যায়নি" };
+  const slug = decodeURIComponent(params.slug);
+  const { data } = await sb.from("blog_posts").select("title, slug, excerpt_bn, meta_description, tags, categories(slug)").eq("slug", slug).eq("status", "published").single();
+  if (!data) return { title: "পোস্ট পাওয়া যায়নি" };
+  const post = normalizeBlogPost(data);
   const base = process.env.NEXT_PUBLIC_BASE_URL || "https://banglaaihub.com";
   return {
     title: post.bangla_title,
@@ -20,13 +23,17 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
 export default async function BlogPost({ params }: { params: { slug: string } }) {
   const sb = createServerClient();
-  const { data: post } = await sb.from("blog_posts").select("*").eq("blog_slug", params.slug).eq("status", "published").single();
-  if (!post) notFound();
+  const slug = decodeURIComponent(params.slug);
+  const { data: rawPost } = await sb.from("blog_posts").select("*, categories(slug, name_bn, icon)").eq("slug", slug).eq("status", "published").single();
+  if (!rawPost) notFound();
+  const post = normalizeBlogPost(rawPost);
 
-  const [{ data: related }, { data: trending }] = await Promise.all([
-    sb.from("blog_posts").select("id, bangla_title, bangla_hook, blog_slug, category, read_time_min, view_count, thumbnail_url, published_at").eq("status", "published").eq("category", post.category).neq("id", post.id).order("published_at", { ascending: false }).limit(6),
-    sb.from("blog_posts").select("id, bangla_title, bangla_hook, blog_slug, category, view_count, read_time_min, published_at").eq("status", "published").neq("id", post.id).order("view_count", { ascending: false }).limit(5),
+  const [{ data: rawRelated }, { data: rawTrending }] = await Promise.all([
+    sb.from("blog_posts").select("id, title, slug, excerpt_bn, category_id, tags, source_platform, reading_time_minutes, view_count, thumbnail_url, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").neq("id", post.id).order("published_at", { ascending: false }).limit(12),
+    sb.from("blog_posts").select("id, title, slug, excerpt_bn, category_id, tags, source_platform, view_count, reading_time_minutes, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").neq("id", post.id).order("view_count", { ascending: false }).limit(5),
   ]);
+  const related = normalizeBlogPosts(rawRelated).filter((item) => item.category === post.category).slice(0, 6);
+  const trending = normalizeBlogPosts(rawTrending);
 
   // JSON-LD
   const base = process.env.NEXT_PUBLIC_BASE_URL || "https://banglaaihub.com";
@@ -35,7 +42,7 @@ export default async function BlogPost({ params }: { params: { slug: string } })
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
-      <BlogPostClient post={post} relatedPosts={related || []} trendingPosts={trending || []} />
+      <BlogPostClient post={post} relatedPosts={related} trendingPosts={trending} />
     </>
   );
 }

@@ -2,16 +2,18 @@ import { createServerClient } from "@/lib/supabase";
 import Link from "next/link";
 import { Metadata } from "next";
 import { PRICING_LABELS, BADGE_LABELS } from "@/lib/constants";
+import { normalizeTools } from "@/lib/schema-normalizers";
 
 export const metadata: Metadata = { title: "AI টুলস ডিরেক্টরি" };
 export const revalidate = 1800;
 
 export default async function ToolsPage({ searchParams }: { searchParams: { pricing?: string } }) {
   const sb = createServerClient();
-  let query = sb.from("tools").select("*, categories(name_bn, slug)").eq("is_active", true).order("view_count", { ascending: false });
-  if (searchParams.pricing) query = query.eq("pricing", searchParams.pricing);
-  const { data: tools } = await query.limit(50);
-  const { data: categories } = await sb.from("categories").select("*").eq("is_active", true).order("sort_order");
+  let query = sb.from("tools").select("*, categories(name_bn, slug)").eq("status", "published").order("view_count", { ascending: false });
+  if (searchParams.pricing) query = query.eq("pricing_type", searchParams.pricing);
+  const { data: rawTools } = await query.limit(50);
+  const { data: categories } = await sb.from("categories").select("*").order("sort_order");
+  const tools = normalizeTools(rawTools);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">

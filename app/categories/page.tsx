@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "ক্যাটাগরি" };
 export const revalidate = 3600;
 
 export default async function CategoriesPage() {
-  const { data: categories } = await createServerClient().from("categories").select("*").eq("is_active", true).order("sort_order");
+  const { data: categories } = await createServerClient().from("categories").select("*").order("sort_order");
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
       <h1 className="text-3xl font-extrabold text-white mb-2">📂 AI টুলস ক্যাটাগরি</h1>
