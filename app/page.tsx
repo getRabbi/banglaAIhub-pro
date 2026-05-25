@@ -1,5 +1,6 @@
 import { createServerClient } from "@/lib/supabase";
 import Link from "next/link";
+import Image from "next/image";
 import { unstable_noStore as noStore } from "next/cache";
 import { PRICING_LABELS, BADGE_LABELS, formatBanglaDateShort } from "@/lib/constants";
 import { normalizeBlogPosts, normalizeTools } from "@/lib/schema-normalizers";
@@ -20,7 +21,7 @@ export default async function HomePage() {
 
   const [{ data: rawFeaturedTools }, { data: rawRecentBlog }, { data: categories }, { data: deals }] = await Promise.all([
     sb.from("tools").select("*, categories(name_bn, slug)").eq("status", "published").order("view_count", { ascending: false }).limit(8),
-    sb.from("blog_posts").select("id, title, slug, excerpt_bn, source_platform, category_id, tags, reading_time_minutes, view_count, thumbnail_url, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").order("published_at", { ascending: false }).limit(6),
+    sb.from("blog_posts").select("id, title, slug, excerpt_bn, source_platform, category_id, tags, reading_time_minutes, view_count, thumbnail_url, thumbnail_alt, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").order("published_at", { ascending: false }).limit(6),
     sb.from("categories").select("*").order("sort_order").limit(12),
     sb.from("deals").select("*, tools(name, logo_url)").eq("is_active", true).order("created_at", { ascending: false }).limit(4),
   ]);
@@ -87,7 +88,7 @@ export default async function HomePage() {
               <Link key={tool.id} href={`/tools/${tool.slug}`} className="glass-card card-hover p-5 group">
                 <div className="flex items-start gap-3 mb-3">
                   <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center text-xl shrink-0">
-                    {tool.logo_url ? <img src={tool.logo_url} alt="" className="w-8 h-8 rounded" /> : "🤖"}
+                    {tool.logo_url ? <Image src={tool.logo_url} alt="" width={32} height={32} className="w-8 h-8 rounded" /> : "🤖"}
                   </div>
                   <div className="min-w-0">
                     <h3 className="font-semibold text-white group-hover:text-brand-electric transition-colors truncate">{tool.name}</h3>
@@ -121,8 +122,8 @@ export default async function HomePage() {
               return (
                 <Link key={post.id} href={`/blog/${post.blog_slug}`} className="glass-card card-hover overflow-hidden group">
                   {post.thumbnail_url && (
-                    <div className="h-40 bg-brand-dark overflow-hidden">
-                      <img src={post.thumbnail_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div className="relative h-40 bg-brand-dark overflow-hidden">
+                      <Image src={post.thumbnail_url} alt={post.thumbnail_alt || post.bangla_title} fill sizes="(max-width: 768px) 100vw, 384px" className="object-cover group-hover:scale-105 transition-transform duration-500" />
                     </div>
                   )}
                   <div className="p-5">

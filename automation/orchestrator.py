@@ -19,7 +19,9 @@ from agents import (
     publish_to_blog,
     get_unpublished_to_fb,
     mark_fb_posted,
+    mark_social_posted,
     post_to_facebook,
+    post_to_telegram,
     is_publishable,
     check_telegram_commands,
 )
@@ -151,12 +153,27 @@ def run_pipeline():
                 blog_url=published["blog_url"],
                 bangla_title=bangla["bangla_title"],
                 category=published.get("category", "tech-news"),
+                image_url=published.get("thumbnail_url"),
+                social_angle=bangla.get("social_angle", ""),
             )
             if fb_pid:
                 mark_fb_posted(published["id"], fb_pid, fb_cid or "")
                 stats["fb_posted"] += 1
         except Exception as e:
             stats["errors"].append(f"FB: {e}")
+
+        try:
+            tg_id = post_to_telegram(
+                hook=bangla["bangla_hook"],
+                blog_url=published["blog_url"],
+                bangla_title=bangla["bangla_title"],
+                category=published.get("category", "tech-news"),
+                image_url=published.get("thumbnail_url"),
+            )
+            if tg_id:
+                mark_social_posted(published["id"], "telegram", tg_id)
+        except Exception as e:
+            stats["errors"].append(f"Telegram post: {e}")
 
     # ─── Phase 4: Pending FB posts ───
     print("\n📘 Phase 4: Pending FB...")
@@ -167,6 +184,7 @@ def run_pipeline():
                 blog_url=post["blog_url"],
                 bangla_title=post["bangla_title"],
                 category=post.get("category", "tech-news"),
+                image_url=post.get("thumbnail_url"),
             )
             if fb_pid:
                 mark_fb_posted(post["id"], fb_pid, fb_cid or "")

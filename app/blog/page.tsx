@@ -1,5 +1,6 @@
 import { createServerClient } from "@/lib/supabase";
 import Link from "next/link";
+import Image from "next/image";
 import { Metadata } from "next";
 import { unstable_noStore as noStore } from "next/cache";
 import { BLOG_CATEGORIES, formatBanglaDateShort } from "@/lib/constants";
@@ -12,12 +13,12 @@ export const revalidate = 1800;
 export default async function BlogPage({ searchParams }: { searchParams: { category?: string; tag?: string } }) {
   noStore();
   const sb = createServerClient();
-  let query = sb.from("blog_posts").select("id, title, slug, excerpt_bn, source_platform, category_id, tags, reading_time_minutes, view_count, thumbnail_url, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").order("published_at", { ascending: false }).limit(60);
+  let query = sb.from("blog_posts").select("id, title, slug, excerpt_bn, source_platform, category_id, tags, reading_time_minutes, view_count, thumbnail_url, thumbnail_alt, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").order("published_at", { ascending: false }).limit(60);
   if (searchParams.tag) query = query.contains("tags", [searchParams.tag]);
 
   const [{ data: rawPosts }, { data: rawTrending }] = await Promise.all([
     query,
-    sb.from("blog_posts").select("id, title, slug, excerpt_bn, category_id, tags, source_platform, view_count, reading_time_minutes, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").order("view_count", { ascending: false }).limit(5),
+    sb.from("blog_posts").select("id, title, slug, excerpt_bn, category_id, tags, source_platform, view_count, reading_time_minutes, thumbnail_url, thumbnail_alt, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").order("view_count", { ascending: false }).limit(5),
   ]);
   const posts = normalizeBlogPosts(rawPosts).filter((post) => !searchParams.category || post.category === searchParams.category);
   const trending = normalizeBlogPosts(rawTrending);
@@ -44,7 +45,12 @@ export default async function BlogPage({ searchParams }: { searchParams: { categ
             const cat = BLOG_CATEGORIES[post.category as keyof typeof BLOG_CATEGORIES];
             const isFirst = i === 0 && !searchParams.category;
             return (
-              <Link key={post.id} href={`/blog/${post.blog_slug}`} className={`glass-card card-hover overflow-hidden group block ${isFirst ? "" : ""}`}>
+              <Link key={post.id} href={`/blog/${post.blog_slug}`} className={`glass-card card-hover overflow-hidden group block ${isFirst ? "md:grid md:grid-cols-[320px_1fr]" : "sm:grid sm:grid-cols-[180px_1fr]"}`}>
+                {post.thumbnail_url && (
+                  <div className={`relative bg-brand-dark overflow-hidden ${isFirst ? "min-h-[220px]" : "min-h-[150px]"}`}>
+                    <Image src={post.thumbnail_url} alt={post.thumbnail_alt || post.bangla_title} fill sizes={isFirst ? "(max-width: 768px) 100vw, 320px" : "(max-width: 640px) 100vw, 180px"} className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                  </div>
+                )}
                 <div className="p-5 sm:p-6">
                   <div className="flex items-center gap-2 mb-3">
                     {cat && <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gray-400 border border-brand-border">{cat.emoji} {cat.label}</span>}

@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+load_dotenv(".env.local", override=True)
 
 
 def _env(name: str, default: str = "") -> str:
@@ -100,6 +101,10 @@ SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
 # ─── Facebook Page API ───
 FB_PAGE_ACCESS_TOKEN = os.getenv("FB_PAGE_ACCESS_TOKEN", "")
 FB_PAGE_ID = os.getenv("FB_PAGE_ID", "")
+
+# ─── Image Discovery ───
+UNSPLASH_ACCESS_KEY = _env("UNSPLASH_ACCESS_KEY", "")
+CONTENT_IMAGE_PROVIDER = _env("CONTENT_IMAGE_PROVIDER", "unsplash").lower()
 
 # ─── Telegram Notifications ───
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")

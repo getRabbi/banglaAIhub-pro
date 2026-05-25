@@ -4,6 +4,7 @@ import re
 from datetime import datetime, timezone
 
 from config import BLOG_BASE_URL
+from agents.image_finder import find_blog_image
 from utils import get_supabase, content_hash, estimate_read_time, detect_category
 
 
@@ -27,6 +28,7 @@ def _missing_column_name(error: Exception) -> str | None:
     message = str(error)
     patterns = [
         r"column blog_posts\.([a-zA-Z0-9_]+) does not exist",
+        r"column social_posts\.([a-zA-Z0-9_]+) does not exist",
         r"Could not find the '([a-zA-Z0-9_]+)' column",
     ]
     for pattern in patterns:
@@ -116,6 +118,11 @@ def publish_to_blog(original: dict, bangla: dict) -> dict | None:
     hook = bangla["bangla_hook"]
     title = bangla["bangla_title"]
     meta_description = bangla.get("meta_description", hook[:155])
+    image = find_blog_image(
+        title=title,
+        category=category,
+        query_hint=bangla.get("image_query", ""),
+    )
 
     record = {
         "title": title,
@@ -127,6 +134,9 @@ def publish_to_blog(original: dict, bangla: dict) -> dict | None:
         "meta_title": title[:70],
         "meta_description": meta_description,
         "focus_keyword": (bangla.get("related_keywords") or tags or [category])[0],
+        "thumbnail_url": image.get("url"),
+        "thumbnail_alt": image.get("alt") or title,
+        "og_image_url": image.get("url"),
         "category_id": category_id,
         "tags": tags,
         "related_tool_ids": [],
@@ -154,6 +164,7 @@ def publish_to_blog(original: dict, bangla: dict) -> dict | None:
             post["category"] = category
             post["source"] = original["source"]
             post["read_time_min"] = post.get("reading_time_minutes", read_time)
+            post["thumbnail_url"] = post.get("thumbnail_url") or image.get("url")
             post["content_hash"] = c_hash
             print(f"[Blog] Published: {slug}")
             return post
@@ -197,6 +208,20 @@ def get_unpublished_to_fb() -> list[dict]:
             .execute()
         )
         posts = result.data or []
+        posted_ids = set()
+        if posts:
+            try:
+                social = (
+                    supabase.table("social_posts")
+                    .select("blog_post_id")
+                    .eq("platform", "facebook")
+                    .in_("blog_post_id", [p["id"] for p in posts])
+                    .execute()
+                )
+                posted_ids = {row["blog_post_id"] for row in (social.data or [])}
+            except Exception as e:
+                print(f"[WARN] Could not check existing Facebook posts: {e}")
+        posts = [post for post in posts if post.get("id") not in posted_ids]
         for post in posts:
             slug = post.get("blog_slug") or post.get("slug")
             post["blog_slug"] = slug
@@ -205,6 +230,7 @@ def get_unpublished_to_fb() -> list[dict]:
             post["category"] = post.get("category") or _category_from_tags(post.get("tags"))
             post["source"] = post.get("source") or post.get("source_platform")
             post["read_time_min"] = post.get("read_time_min") or post.get("reading_time_minutes")
+            post["thumbnail_url"] = post.get("thumbnail_url")
             post["blog_url"] = f"{BLOG_BASE_URL}/blog/{slug}"
         return posts
     except Exception as e:
@@ -212,21 +238,42 @@ def get_unpublished_to_fb() -> list[dict]:
         return []
 
 
-def mark_fb_posted(post_id: int, fb_post_id: str, fb_comment_id: str):
+def mark_social_posted(post_id: int, platform: str, social_post_id: str, comment_id: str = ""):
     supabase = get_supabase()
+    payload = {
+        "blog_post_id": post_id,
+        "platform": platform,
+        "post_text": "",
+        "post_url": "",
+        "image_url": "",
+        "status": "posted",
+        "posted_at": datetime.now(timezone.utc).isoformat(),
+        "platform_post_id": social_post_id,
+        "post_id": social_post_id,
+        "comment_id": comment_id,
+    }
     try:
-        supabase.table("social_posts").insert(
-            {
-                "blog_post_id": post_id,
-                "platform": "facebook",
-                "post_id": fb_post_id,
-                "comment_id": fb_comment_id,
-                "status": "posted",
-            }
-        ).execute()
-        print(f"[Blog] Marked social posted: {post_id}")
+        inserted = False
+        for _ in range(8):
+            try:
+                supabase.table("social_posts").insert(payload).execute()
+                inserted = True
+                break
+            except Exception as e:
+                missing = _missing_column_name(e)
+                if missing and missing in payload:
+                    payload.pop(missing, None)
+                    continue
+                raise
+        if not inserted:
+            raise RuntimeError("Could not insert social post status after removing unsupported columns.")
+        print(f"[Blog] Marked {platform} posted: {post_id}")
     except Exception as e:
         print(f"[WARN] Social post status not recorded: {e}")
+
+
+def mark_fb_posted(post_id: int, fb_post_id: str, fb_comment_id: str):
+    mark_social_posted(post_id, "facebook", fb_post_id, fb_comment_id)
 
 
 def increment_view(slug: str):

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { SOURCE_MAP, formatBanglaDate, formatBanglaDateShort, formatMarkdown } from "@/lib/constants";
 const CATEGORY_MAP: Record<string, { label: string; emoji: string; color: string; textClass: string; badgeClass: string }> = {
   "money-making": { label: "অনলাইন আয়", emoji: "💰", color: "emerald", textClass: "text-emerald-400", badgeClass: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" },
@@ -9,8 +10,8 @@ const CATEGORY_MAP: Record<string, { label: string; emoji: string; color: string
   "product-review": { label: "প্রোডাক্ট রিভিউ", emoji: "🚀", color: "amber", textClass: "text-amber-400", badgeClass: "bg-amber-500/10 border-amber-500/20 text-amber-400" },
 };
 
-interface Post { id: number; bangla_title: string; bangla_body: string; bangla_hook: string; blog_slug: string; blog_url: string; meta_description: string; category: string; tags: string[]; source: string; read_time_min: number; view_count: number; published_at: string; thumbnail_url?: string; }
-type PostSummary = Pick<Post, "id" | "bangla_title" | "bangla_hook" | "blog_slug" | "category" | "read_time_min" | "view_count" | "published_at"> & { thumbnail_url?: string };
+interface Post { id: number; bangla_title: string; bangla_body: string; bangla_hook: string; blog_slug: string; blog_url: string; meta_description: string; category: string; tags: string[]; source: string; read_time_min: number; view_count: number; published_at: string; thumbnail_url?: string; thumbnail_alt?: string; }
+type PostSummary = Pick<Post, "id" | "bangla_title" | "bangla_hook" | "blog_slug" | "category" | "read_time_min" | "view_count" | "published_at" | "thumbnail_url" | "thumbnail_alt">;
 
 export default function BlogPostClient({ post, relatedPosts, trendingPosts }: { post: Post; relatedPosts: PostSummary[]; trendingPosts: PostSummary[] }) {
   const [progress, setProgress] = useState(0);
@@ -59,6 +60,14 @@ export default function BlogPostClient({ post, relatedPosts, trendingPosts }: { 
           <span>👁 {post.view_count} বার পড়া</span>
           <span className="px-2 py-0.5 rounded bg-white/5 text-gray-500 text-xs">{SOURCE_MAP[post.source] || post.source}</span>
         </div>
+
+        {post.thumbnail_url && (
+          <figure className="mb-8 overflow-hidden rounded-2xl border border-brand-border bg-brand-dark">
+            <div className="relative aspect-[16/9] w-full">
+              <Image src={post.thumbnail_url} alt={post.thumbnail_alt || post.bangla_title} fill sizes="(max-width: 768px) 100vw, 896px" className="object-cover" priority />
+            </div>
+          </figure>
+        )}
 
         {/* Affiliate disclosure */}
         <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 mb-8 text-xs text-amber-300/80">⚠️ এই আর্টিকেলে affiliate link থাকতে পারে। বিস্তারিত জানতে <Link href="/disclaimer" className="underline">ডিসক্লেইমার</Link> দেখুন।</div>
@@ -120,6 +129,11 @@ function PostCard({ post }: { post: PostSummary }) {
   const cat = CATEGORY_MAP[post.category as keyof typeof CATEGORY_MAP] || CATEGORY_MAP["tech-news"];
   return (
     <Link href={`/blog/${post.blog_slug}`} className="glass-card card-hover overflow-hidden group block">
+      {post.thumbnail_url && (
+        <div className="relative h-40 bg-brand-dark overflow-hidden">
+          <Image src={post.thumbnail_url} alt={post.thumbnail_alt || post.bangla_title} fill sizes="(max-width: 768px) 100vw, 384px" className="object-cover group-hover:scale-105 transition-transform duration-500" />
+        </div>
+      )}
       <div className="p-5">
         <div className="flex items-center gap-2 mb-3">
           <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gray-400 border border-brand-border">{cat.emoji} {cat.label}</span>

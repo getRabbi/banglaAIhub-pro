@@ -1,5 +1,6 @@
 import { createServerClient } from "@/lib/supabase";
 import Link from "next/link";
+import Image from "next/image";
 import { Metadata } from "next";
 import { unstable_noStore as noStore } from "next/cache";
 import { formatBanglaDateShort } from "@/lib/constants";
@@ -9,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 1800;
 export default async function MakeMoneyPage() {
   noStore();
-  const { data } = await createServerClient().from("blog_posts").select("id, title, slug, excerpt_bn, source_platform, category_id, tags, reading_time_minutes, view_count, thumbnail_url, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").order("published_at", { ascending: false }).limit(50);
+  const { data } = await createServerClient().from("blog_posts").select("id, title, slug, excerpt_bn, source_platform, category_id, tags, reading_time_minutes, view_count, thumbnail_url, thumbnail_alt, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").order("published_at", { ascending: false }).limit(50);
   const posts = normalizeBlogPosts(data).filter((post) => post.category === "money-making").slice(0, 20);
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
@@ -19,10 +20,17 @@ export default async function MakeMoneyPage() {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {(posts || []).map((p: any) => (
-          <Link key={p.id} href={`/blog/${p.blog_slug}`} className="glass-card card-hover p-5 group">
+          <Link key={p.id} href={`/blog/${p.blog_slug}`} className="glass-card card-hover overflow-hidden group">
+            {p.thumbnail_url && (
+              <div className="relative h-40 bg-brand-dark overflow-hidden">
+                <Image src={p.thumbnail_url} alt={p.thumbnail_alt || p.bangla_title} fill sizes="(max-width: 768px) 100vw, 384px" className="object-cover group-hover:scale-105 transition-transform duration-500" />
+              </div>
+            )}
+            <div className="p-5">
             <h2 className="font-semibold text-white group-hover:text-brand-orange transition-colors mb-2 line-clamp-2">{p.bangla_title}</h2>
             <p className="text-sm text-gray-500 line-clamp-2 mb-3">{p.bangla_hook}</p>
             <div className="flex items-center gap-3 text-xs text-gray-600"><span>⏱ {p.read_time_min} min</span><span>👁 {p.view_count}</span><span>{formatBanglaDateShort(p.published_at)}</span></div>
+            </div>
           </Link>
         ))}
       </div>

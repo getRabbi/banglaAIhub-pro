@@ -118,3 +118,40 @@ def detect_category(source: str, title: str, body: str) -> str:
     if ai_score > 0:
         return "ai-tools"
     return "tech-news"
+
+
+def detect_category(source: str, title: str, body: str) -> str:
+    """Auto-detect category without pushing every programming post into AI tools."""
+    text = f"{title} {body}".lower()
+
+    money_keywords = [
+        "money", "earn", "income", "hustle", "freelance", "passive",
+        "dollar", "revenue", "profit", "business", "client", "gig",
+        "online income", "side hustle",
+    ]
+    ai_keywords = [
+        " ai ", "gpt", "llm", "chatgpt", "claude", "gemini", "neural",
+        "machine learning", "deep learning", "prompt", "agentic", "rag",
+        "stable diffusion", "computer vision",
+    ]
+    programming_keywords = [
+        "programming", "developer", "software", "github", "open source",
+        "rust", "golang", "go ", "python", "javascript", "typescript",
+        "database", "postgres", "framework", "library", "compiler",
+        "migration", "backend", "frontend", "codebase", "api design",
+    ]
+
+    padded = f" {text} "
+    money_score = sum(1 for kw in money_keywords if kw in text)
+    ai_score = sum(1 for kw in ai_keywords if kw in padded)
+    programming_score = sum(1 for kw in programming_keywords if kw in text)
+
+    if source == "producthunt":
+        return "product-review"
+    if money_score > max(ai_score, programming_score):
+        return "money-making"
+    if programming_score > ai_score and source in {"hackernews", "github"}:
+        return "tech-news"
+    if ai_score > 0:
+        return "ai-tools"
+    return "tech-news"

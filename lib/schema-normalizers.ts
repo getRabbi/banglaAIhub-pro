@@ -40,6 +40,8 @@ export function normalizeBlogPost(row: any) {
     view_count: row?.view_count || 0,
     published_at: publishedAt,
     thumbnail_url: row?.thumbnail_url || undefined,
+    thumbnail_alt: row?.thumbnail_alt || title,
+    og_image_url: row?.og_image_url || row?.thumbnail_url || undefined,
   };
 }
 
