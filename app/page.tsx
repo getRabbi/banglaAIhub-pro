@@ -4,6 +4,7 @@ import { PRICING_LABELS, BADGE_LABELS, formatBanglaDateShort } from "@/lib/const
 import { normalizeBlogPosts, normalizeTools } from "@/lib/schema-normalizers";
 
 export const revalidate = 1800;
+export const dynamic = "force-dynamic";
 
 const BLOG_CAT_BADGE: Record<string, { emoji: string; label: string; cls: string }> = {
   "money-making": { emoji: "💰", label: "অনলাইন আয়", cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },

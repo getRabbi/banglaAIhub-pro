@@ -5,6 +5,7 @@ import { BLOG_CATEGORIES, formatBanglaDateShort } from "@/lib/constants";
 import { normalizeBlogPosts } from "@/lib/schema-normalizers";
 
 export const metadata: Metadata = { title: "ব্লগ" };
+export const dynamic = "force-dynamic";
 export const revalidate = 1800;
 
 export default async function BlogPage({ searchParams }: { searchParams: { category?: string; tag?: string } }) {

@@ -4,6 +4,7 @@ import { Metadata } from "next";
 import { formatBanglaDateShort } from "@/lib/constants";
 import { normalizeBlogPosts } from "@/lib/schema-normalizers";
 export const metadata: Metadata = { title: "অনলাইনে আয় করুন" };
+export const dynamic = "force-dynamic";
 export const revalidate = 1800;
 export default async function MakeMoneyPage() {
   const { data } = await createServerClient().from("blog_posts").select("id, title, slug, excerpt_bn, source_platform, category_id, tags, reading_time_minutes, view_count, thumbnail_url, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").order("published_at", { ascending: false }).limit(50);

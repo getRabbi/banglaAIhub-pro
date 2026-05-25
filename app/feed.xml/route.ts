@@ -1,6 +1,9 @@
 import { createServerClient } from "@/lib/supabase";
 import { NextResponse } from "next/server";
 import { normalizeBlogPosts } from "@/lib/schema-normalizers";
+
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const base = process.env.NEXT_PUBLIC_BASE_URL || "https://banglaaihub.com";
   const { data } = await createServerClient().from("blog_posts").select("title, slug, excerpt_bn, tags, published_at, created_at, categories(slug)").eq("status", "published").order("published_at", { ascending: false }).limit(50);
