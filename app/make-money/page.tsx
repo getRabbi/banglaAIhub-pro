@@ -1,12 +1,14 @@
 import { createServerClient } from "@/lib/supabase";
 import Link from "next/link";
 import { Metadata } from "next";
+import { unstable_noStore as noStore } from "next/cache";
 import { formatBanglaDateShort } from "@/lib/constants";
 import { normalizeBlogPosts } from "@/lib/schema-normalizers";
 export const metadata: Metadata = { title: "অনলাইনে আয় করুন" };
 export const dynamic = "force-dynamic";
 export const revalidate = 1800;
 export default async function MakeMoneyPage() {
+  noStore();
   const { data } = await createServerClient().from("blog_posts").select("id, title, slug, excerpt_bn, source_platform, category_id, tags, reading_time_minutes, view_count, thumbnail_url, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").order("published_at", { ascending: false }).limit(50);
   const posts = normalizeBlogPosts(data).filter((post) => post.category === "money-making").slice(0, 20);
   return (

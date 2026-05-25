@@ -1,5 +1,6 @@
 import { createServerClient } from "@/lib/supabase";
 import Link from "next/link";
+import { unstable_noStore as noStore } from "next/cache";
 import { PRICING_LABELS, BADGE_LABELS, formatBanglaDateShort } from "@/lib/constants";
 import { normalizeBlogPosts, normalizeTools } from "@/lib/schema-normalizers";
 
@@ -14,6 +15,7 @@ const BLOG_CAT_BADGE: Record<string, { emoji: string; label: string; cls: string
 };
 
 export default async function HomePage() {
+  noStore();
   const sb = createServerClient();
 
   const [{ data: rawFeaturedTools }, { data: rawRecentBlog }, { data: categories }, { data: deals }] = await Promise.all([

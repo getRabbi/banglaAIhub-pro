@@ -1,6 +1,7 @@
 import { createServerClient } from "@/lib/supabase";
 import Link from "next/link";
 import { Metadata } from "next";
+import { unstable_noStore as noStore } from "next/cache";
 import { BLOG_CATEGORIES, formatBanglaDateShort } from "@/lib/constants";
 import { normalizeBlogPosts } from "@/lib/schema-normalizers";
 
@@ -9,6 +10,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 1800;
 
 export default async function BlogPage({ searchParams }: { searchParams: { category?: string; tag?: string } }) {
+  noStore();
   const sb = createServerClient();
   let query = sb.from("blog_posts").select("id, title, slug, excerpt_bn, source_platform, category_id, tags, reading_time_minutes, view_count, thumbnail_url, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").order("published_at", { ascending: false }).limit(60);
   if (searchParams.tag) query = query.contains("tags", [searchParams.tag]);
