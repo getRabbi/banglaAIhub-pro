@@ -73,8 +73,8 @@ export default async function AdminDashboard() {
         {/* Recent Jobs */}
         <div className="glass-card p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-white">🔁 OpenClaw Jobs</h2>
-            <Link href="/admin/openclaw-jobs" className="text-xs text-brand-electric hover:underline">সব →</Link>
+            <h2 className="font-semibold text-white">🔁 Automation Jobs</h2>
+            <Link href="/admin/automation" className="text-xs text-brand-electric hover:underline">সব →</Link>
           </div>
           <div className="space-y-3">
             {(recentJobs || []).map((j: any) => {

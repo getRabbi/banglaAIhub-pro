@@ -8,7 +8,7 @@ const SETTINGS_KEYS = [
   { key: "telegram_channel", label: "Telegram Channel", placeholder: "@banglaaihub" },
   { key: "default_og_image", label: "Default OG Image URL", placeholder: "https://..." },
   { key: "affiliate_disclosure_bn", label: "Disclosure Text (BN)", placeholder: "সাইটের প্রয়োজনীয় নোট..." },
-  { key: "posts_per_run", label: "Posts Per OpenClaw Run", placeholder: "3" },
+  { key: "posts_per_run", label: "Posts Per Automation Run", placeholder: "3" },
   { key: "fb_comment_delay_sec", label: "FB Comment Delay (sec)", placeholder: "300" },
 ];
 

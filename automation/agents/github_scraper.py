@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta, timezone
 import requests
-from config import GITHUB_FETCH_COUNT, GITHUB_MIN_STARS, GITHUB_TOKEN, GITHUB_TOPICS
+from config import AUTOMATION_USER_AGENT, GITHUB_FETCH_COUNT, GITHUB_MIN_STARS, GITHUB_TOKEN, GITHUB_TOPICS
 
 GITHUB_SEARCH_URL = "https://api.github.com/search/repositories"
 
@@ -10,7 +10,7 @@ GITHUB_SEARCH_URL = "https://api.github.com/search/repositories"
 def _headers() -> dict:
     headers = {
         "Accept": "application/vnd.github+json",
-        "User-Agent": "OpenClaw/4.0 (BanglaAIHub open-source discovery)",
+        "User-Agent": AUTOMATION_USER_AGENT,
     }
     if GITHUB_TOKEN:
         headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"

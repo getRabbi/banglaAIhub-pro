@@ -1,13 +1,13 @@
 """
-OpenClaw v4 — Orchestrator
-Pipeline: Scrape (Reddit+X+HN+PH) → Dedup → Translate → Blog → Facebook → Notify
+BanglaAIHub Automation
+Pipeline: Scrape sources → deduplicate → write Bangla post → publish → social post → notify.
 """
 
 import sys
 import traceback
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
-from config import POSTS_PER_RUN
+from config import AUTOMATION_NAME, POSTS_PER_RUN
 from utils import get_supabase, content_hash, is_duplicate, send_telegram, detect_category
 from agents import (
     scrape_reddit,
@@ -34,6 +34,78 @@ except Exception:
     pass
 
 
+def _utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _mark_stale_jobs(supabase) -> None:
+    """Recover jobs left as running after a timeout, cancellation, or network failure."""
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat()
+    try:
+        supabase.table("openclaw_jobs").update(
+            {
+                "status": "failed",
+                "completed_at": _utc_now(),
+                "error_message": "Marked failed by the next automation run after stale running status.",
+            }
+        ).eq("status", "running").lt("started_at", cutoff).execute()
+    except Exception as e:
+        print(f"[WARN] Job stale cleanup skipped: {e}")
+
+
+def _start_job(supabase) -> int | None:
+    try:
+        _mark_stale_jobs(supabase)
+        result = (
+            supabase.table("openclaw_jobs")
+            .insert({"job_type": "content_automation", "status": "running", "started_at": _utc_now()})
+            .execute()
+        )
+        if result.data:
+            return result.data[0].get("id")
+    except Exception as e:
+        print(f"[WARN] Job tracking unavailable: {e}")
+    return None
+
+
+def _log_job(supabase, job_id: int | None, level: str, message: str, metadata: dict | None = None) -> None:
+    if not job_id:
+        return
+    try:
+        supabase.table("openclaw_job_logs").insert(
+            {
+                "job_id": job_id,
+                "level": level,
+                "message": message,
+                "metadata": metadata or {},
+            }
+        ).execute()
+    except Exception as e:
+        print(f"[WARN] Job log skipped: {e}")
+
+
+def _finish_job(
+    supabase,
+    job_id: int | None,
+    stats: dict,
+    status: str = "completed",
+    error_message: str = "",
+) -> None:
+    if not job_id:
+        return
+    try:
+        supabase.table("openclaw_jobs").update(
+            {
+                "status": status,
+                "completed_at": _utc_now(),
+                "stats": stats,
+                "error_message": error_message[:500],
+            }
+        ).eq("id", job_id).execute()
+    except Exception as e:
+        print(f"[WARN] Job finish update skipped: {e}")
+
+
 def run_pipeline():
     start = datetime.now()
     stats = {
@@ -42,10 +114,12 @@ def run_pipeline():
     }
 
     print("=" * 60)
-    print(f"🚀 OpenClaw v4 — {start.strftime('%Y-%m-%d %H:%M')}")
+    print(f"🚀 {AUTOMATION_NAME} — {start.strftime('%Y-%m-%d %H:%M')}")
     print("=" * 60)
 
     supabase = get_supabase()
+    job_id = _start_job(supabase)
+    _log_job(supabase, job_id, "info", "Automation started", {"posts_per_run": POSTS_PER_RUN})
 
     # ─── Phase 1: Scrape ───
     print("\n📡 Phase 1: Scraping...")
@@ -63,9 +137,11 @@ def run_pipeline():
             posts = scraper()
             all_posts.extend(posts)
             print(f"  {name}: {len(posts)}")
+            _log_job(supabase, job_id, "info", f"{name}: {len(posts)} posts")
         except Exception as e:
             stats["errors"].append(f"{name}: {e}")
             print(f"  {name}: ERROR — {e}")
+            _log_job(supabase, job_id, "warn", f"{name} failed", {"error": str(e)})
 
     daily_income = generate_daily_income_topic()
     all_posts.append(daily_income)
@@ -74,9 +150,10 @@ def run_pipeline():
     stats["scraped"] = len(all_posts)
 
     if not all_posts:
-        msg = "⚠️ OpenClaw v4: No posts scraped. Check credentials."
+        msg = f"⚠️ {AUTOMATION_NAME}: No posts scraped. Check credentials."
         print(msg)
         send_telegram(msg)
+        _finish_job(supabase, job_id, stats, "completed", "No posts scraped.")
         return
 
     # ─── Phase 2: Dedup & Select ───
@@ -117,7 +194,8 @@ def run_pipeline():
     print(f"  Unique: {len(unique)} | Dupes skipped: {stats['dupes']}")
 
     if not unique:
-        send_telegram("ℹ️ OpenClaw v4: All dupes, no new content.")
+        send_telegram(f"ℹ️ {AUTOMATION_NAME}: All dupes, no new content.")
+        _finish_job(supabase, job_id, stats, "completed", "All candidates were duplicates.")
         return
 
     # ─── Phase 3: Translate + Publish + FB ───
@@ -142,10 +220,12 @@ def run_pipeline():
             )
             if not bangla:
                 stats["errors"].append(f"Translate fail: {post['original_title'][:30]}")
+                _log_job(supabase, job_id, "warn", "Translate failed", {"title": post["original_title"][:120]})
                 continue
             stats["translated"] += 1
         except Exception as e:
             stats["errors"].append(f"Translate: {e}")
+            _log_job(supabase, job_id, "warn", "Translate exception", {"error": str(e)})
             continue
 
         # Quality gate
@@ -158,6 +238,7 @@ def run_pipeline():
             reasons = ", ".join(quality["reasons"][:3])
             print(f"    ❌ Rejected: {reasons}")
             stats["errors"].append(f"Quality reject ({grade}): {bangla['bangla_title'][:25]}")
+            _log_job(supabase, job_id, "warn", "Quality rejected", {"grade": grade, "reasons": quality["reasons"][:3]})
             continue
 
         # Publish
@@ -165,10 +246,13 @@ def run_pipeline():
             published = publish_to_blog(original=post, bangla=bangla)
             if not published:
                 stats["errors"].append(f"Publish fail: {bangla['bangla_title'][:30]}")
+                _log_job(supabase, job_id, "warn", "Publish failed", {"title": bangla["bangla_title"][:120]})
                 continue
             stats["published"] += 1
+            _log_job(supabase, job_id, "info", "Post published", {"slug": published.get("blog_slug"), "title": bangla["bangla_title"][:120]})
         except Exception as e:
             stats["errors"].append(f"Publish: {e}")
+            _log_job(supabase, job_id, "error", "Publish exception", {"error": str(e)})
             continue
 
         # Facebook
@@ -184,8 +268,10 @@ def run_pipeline():
             if fb_pid:
                 mark_fb_posted(published["id"], fb_pid, fb_cid or "")
                 stats["fb_posted"] += 1
+                _log_job(supabase, job_id, "info", "Facebook posted", {"post_id": published.get("id")})
         except Exception as e:
             stats["errors"].append(f"FB: {e}")
+            _log_job(supabase, job_id, "warn", "Facebook post failed", {"error": str(e)})
 
         try:
             tg_id = post_to_telegram(
@@ -197,8 +283,10 @@ def run_pipeline():
             )
             if tg_id:
                 mark_social_posted(published["id"], "telegram", tg_id)
+                _log_job(supabase, job_id, "info", "Telegram posted", {"post_id": published.get("id")})
         except Exception as e:
             stats["errors"].append(f"Telegram post: {e}")
+            _log_job(supabase, job_id, "warn", "Telegram post failed", {"error": str(e)})
 
     # ─── Phase 4: Pending FB posts ───
     print("\n📘 Phase 4: Pending FB...")
@@ -216,11 +304,13 @@ def run_pipeline():
                 stats["fb_posted"] += 1
     except Exception as e:
         print(f"  Pending error: {e}")
+        stats["errors"].append(f"Pending FB: {e}")
+        _log_job(supabase, job_id, "warn", "Pending Facebook posts failed", {"error": str(e)})
 
     # ─── Report ───
     elapsed = (datetime.now() - start).total_seconds()
     report = f"""
-✅ <b>OpenClaw v4 — Complete</b>
+✅ <b>{AUTOMATION_NAME} — Complete</b>
 ⏱ {elapsed:.0f}s
 
 📊 Scraped: {stats['scraped']}
@@ -236,6 +326,7 @@ def run_pipeline():
 
     print(report)
     send_telegram(report)
+    _finish_job(supabase, job_id, stats, "completed")
 
     # ─── Phase 5: Check Telegram admin commands ───
     try:
@@ -248,7 +339,7 @@ if __name__ == "__main__":
     try:
         run_pipeline()
     except Exception:
-        err = f"💥 OpenClaw v4 CRITICAL:\n{traceback.format_exc()}"
+        err = f"💥 {AUTOMATION_NAME} CRITICAL:\n{traceback.format_exc()}"
         print(err)
         send_telegram(err)
         sys.exit(1)

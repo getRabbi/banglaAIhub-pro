@@ -19,7 +19,7 @@ const SIDEBAR = [
   { href: "/admin/newsletter", icon: "📧", label: "Newsletter" },
   { href: "/admin/calendar", icon: "📅", label: "Calendar" },
   { href: "/admin/analytics", icon: "📈", label: "Analytics" },
-  { href: "/admin/openclaw-jobs", icon: "🔁", label: "OpenClaw Jobs" },
+  { href: "/admin/automation", icon: "🔁", label: "Automation Jobs" },
   { href: "/admin/settings", icon: "⚙️", label: "Settings" },
 ];
 

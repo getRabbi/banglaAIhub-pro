@@ -1,8 +1,20 @@
-"""Telegram Admin Bot — check stats, recent posts, control pipeline."""
+"""Telegram Admin Bot - check stats and recent automation output."""
 
 import requests
 from utils import get_supabase, send_telegram
 from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, CATEGORIES
+
+
+def _post_category(post: dict) -> str:
+    category = post.get("category")
+    if category in CATEGORIES:
+        return category
+    tags = post.get("tags")
+    if isinstance(tags, list):
+        for tag in tags:
+            if tag in CATEGORIES:
+                return tag
+    return "tech-news"
 
 
 def get_stats_message() -> str:
@@ -11,8 +23,8 @@ def get_stats_message() -> str:
 
     # Total counts
     result = supabase.table("blog_posts").select(
-        "id, category, view_count, source, fb_posted"
-    ).eq("blog_published", True).execute()
+        "id, category, tags, view_count, source_platform, source, fb_posted"
+    ).eq("status", "published").execute()
     posts = result.data or []
 
     total = len(posts)
@@ -22,14 +34,14 @@ def get_stats_message() -> str:
     # Category breakdown
     cat_lines = []
     for key, info in CATEGORIES.items():
-        count = sum(1 for p in posts if p.get("category") == key)
-        views = sum(p.get("view_count", 0) for p in posts if p.get("category") == key)
+        count = sum(1 for p in posts if _post_category(p) == key)
+        views = sum(p.get("view_count", 0) for p in posts if _post_category(p) == key)
         cat_lines.append(f"  {info['emoji']} {info['label']}: {count} posts, {views} views")
 
     # Source breakdown
     sources = {}
     for p in posts:
-        s = p.get("source", "unknown")
+        s = p.get("source") or p.get("source_platform") or "unknown"
         sources[s] = sources.get(s, 0) + 1
     source_lines = [f"  • {k}: {v}" for k, v in sorted(sources.items(), key=lambda x: -x[1])]
 
@@ -40,7 +52,7 @@ def get_stats_message() -> str:
     if top:
         top_ids = [p["id"] for p in top]
         top_result = supabase.table("blog_posts").select(
-            "id, bangla_title, view_count"
+            "id, title, bangla_title, view_count"
         ).in_("id", top_ids).execute()
         top_map = {p["id"]: p for p in (top_result.data or [])}
     else:
@@ -49,12 +61,12 @@ def get_stats_message() -> str:
     top_lines = []
     for i, p in enumerate(top, 1):
         info = top_map.get(p["id"], {})
-        title = info.get("bangla_title", "???")[:40]
+        title = (info.get("bangla_title") or info.get("title") or "???")[:40]
         views = p.get("view_count", 0)
         top_lines.append(f"  {i}. {title}... ({views} views)")
 
     msg = f"""
-📊 <b>OpenClaw v3 — Dashboard</b>
+📊 <b>BanglaAIHub Automation — Dashboard</b>
 
 📝 Total Posts: <b>{total}</b>
 👁 Total Views: <b>{total_views}</b>
@@ -77,8 +89,8 @@ def get_recent_message() -> str:
     """Get last 5 published posts."""
     supabase = get_supabase()
     result = supabase.table("blog_posts").select(
-        "bangla_title, blog_url, category, view_count, fb_posted, published_at"
-    ).eq("blog_published", True).order(
+        "title, bangla_title, slug, blog_url, category, tags, view_count, fb_posted, published_at"
+    ).eq("status", "published").order(
         "published_at", desc=True
     ).limit(5).execute()
 
@@ -88,12 +100,13 @@ def get_recent_message() -> str:
 
     lines = ["📰 <b>Recent Posts:</b>\n"]
     for p in posts:
-        cat = CATEGORIES.get(p["category"], {})
+        cat = CATEGORIES.get(_post_category(p), {})
         emoji = cat.get("emoji", "📝")
         fb = "✅" if p.get("fb_posted") else "⏳"
-        title = p["bangla_title"][:45]
+        title = (p.get("bangla_title") or p.get("title") or "BanglaAIHub update")[:45]
+        blog_url = p.get("blog_url") or f"https://banglaaihub.vercel.app/blog/{p.get('slug')}"
         lines.append(
-            f"{emoji} <a href=\"{p['blog_url']}\">{title}</a>\n"
+            f"{emoji} <a href=\"{blog_url}\">{title}</a>\n"
             f"   👁 {p['view_count']} views | FB: {fb}"
         )
 
@@ -110,7 +123,7 @@ def handle_command(command: str) -> str:
         return get_recent_message()
     elif cmd == "/help":
         return (
-            "🤖 <b>OpenClaw Admin Commands:</b>\n\n"
+            "🤖 <b>BanglaAIHub Automation Commands:</b>\n\n"
             "/stats — Full dashboard\n"
             "/recent — Last 5 posts\n"
             "/help — Show this message"

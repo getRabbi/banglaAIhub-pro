@@ -7,6 +7,7 @@ from config import (
     HN_MIN_SCORE,
     HN_FETCH_COUNT,
     HN_RELEVANT_KEYWORDS,
+    AUTOMATION_USER_AGENT,
 )
 
 
@@ -30,7 +31,7 @@ def _fetch_article_body(url: str, title: str) -> str:
         resp = requests.get(
             url,
             timeout=10,
-            headers={"User-Agent": "OpenClaw/3.0 (content aggregator)"},
+            headers={"User-Agent": AUTOMATION_USER_AGENT},
         )
         resp.raise_for_status()
         # Extract text between <p> tags (simple extraction)

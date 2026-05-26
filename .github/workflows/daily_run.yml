@@ -1,17 +1,27 @@
-name: BanglaAIHub — OpenClaw Daily Pipeline
+name: BanglaAIHub — Content Automation
 
 on:
   schedule:
-    # 9 AM BD (3 UTC), 1 PM BD (7 UTC), 9 PM BD (15 UTC)
-    - cron: "0 3 * * *"
-    - cron: "0 7 * * *"
-    - cron: "0 15 * * *"
+    # Every 3 hours. GitHub Actions is the primary always-on scheduler.
+    - cron: "17 */3 * * *"
   workflow_dispatch:
+    inputs:
+      posts_per_run:
+        description: "Number of posts to publish in this run"
+        required: false
+        default: "3"
+
+concurrency:
+  group: banglaaihub-content-automation
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     defaults:
       run:
         working-directory: automation
@@ -24,6 +34,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: automation/requirements.txt
 
       - name: Install deps
         run: pip install -r requirements.txt
@@ -45,12 +57,13 @@ jobs:
           fi
           echo "run_pipeline=true" >> "$GITHUB_OUTPUT"
 
-      - name: Run OpenClaw
+      - name: Run content automation with retries
         if: steps.preflight.outputs.run_pipeline == 'true'
+        shell: bash
         env:
           REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
           REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
-          REDDIT_USER_AGENT: "OpenClaw/4.0"
+          REDDIT_USER_AGENT: "BanglaAIHubAutomation/1.0"
           X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
           PH_API_TOKEN: ${{ secrets.PH_API_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -70,4 +83,17 @@ jobs:
           UNSPLASH_SECRET_KEY: ${{ secrets.UNSPLASH_SECRET_KEY }}
           CONTENT_IMAGE_PROVIDER: ${{ vars.CONTENT_IMAGE_PROVIDER }}
           BLOG_BASE_URL: ${{ secrets.BLOG_BASE_URL }}
-        run: python orchestrator.py
+          POSTS_PER_RUN: ${{ inputs.posts_per_run || vars.POSTS_PER_RUN || '3' }}
+          AUTOMATION_NAME: "BanglaAIHub Automation"
+        run: |
+          status=1
+          for attempt in 1 2 3; do
+            echo "Automation attempt ${attempt}/3"
+            if python orchestrator.py; then
+              status=0
+              break
+            fi
+            echo "Attempt ${attempt} failed. Retrying after backoff..."
+            sleep $((attempt * 60))
+          done
+          exit "$status"

@@ -40,14 +40,14 @@ Complete Next.js 14 platform + Python automation. Deploy to Vercel, connect Supa
 ### Database (Supabase — 22 tables)
 categories, tools, tool_alternatives, comparisons, top_lists, guides, blog_posts, deals, prompts, workflows, tracked link tables, scrape_queue, published_topics, social_posts, newsletter_subscribers, analytics_events, openclaw_jobs, openclaw_job_logs, site_settings, glossary, resources
 
-### Python Automation (OpenClaw)
+### Python Automation (BanglaAIHub Automation)
 - Reddit (16 subreddits) + X/Twitter + Hacker News + Product Hunt scraping
 - OpenAI GPT-4o-mini Bangla rewriting
 - Content quality scoring (A-F grading)
 - Blog publish to Supabase
 - Facebook auto-post (hook + first comment link)
 - Telegram notifications + admin commands
-- GitHub Actions cron (3x daily)
+- GitHub Actions cron with retries and job tracking
 
 ## Setup
 

@@ -22,7 +22,7 @@ export default function ScrapeQueueClient({ items: initial }: { items: any[] }) 
   return (
     <div>
       <h1 className="text-2xl font-bold text-white mb-2">🤖 Scrape Queue</h1>
-      <p className="text-gray-400 mb-6">OpenClaw যা collect করেছে — approve করলে blog publish হবে</p>
+      <p className="text-gray-400 mb-6">Automation যা collect করেছে — approve করলে blog publish হবে</p>
 
       {pending.length > 0 && (
         <div className="mb-8">
@@ -72,7 +72,7 @@ export default function ScrapeQueueClient({ items: initial }: { items: any[] }) 
         </div>
       )}
 
-      {items.length === 0 && <p className="text-center text-gray-500 py-16">Queue খালি — OpenClaw pipeline run করুন</p>}
+      {items.length === 0 && <p className="text-center text-gray-500 py-16">Queue খালি — automation pipeline run করুন</p>}
     </div>
   );
 }

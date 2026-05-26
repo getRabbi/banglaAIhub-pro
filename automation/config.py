@@ -8,10 +8,17 @@ load_dotenv(".env.local", override=True)
 def _env(name: str, default: str = "") -> str:
     return os.getenv(name) or default
 
+
+AUTOMATION_NAME = _env("AUTOMATION_NAME", "BanglaAIHub Automation")
+AUTOMATION_USER_AGENT = _env(
+    "AUTOMATION_USER_AGENT",
+    "BanglaAIHubAutomation/1.0 (content discovery; banglaaihub.com)",
+)
+
 # ─── Reddit API ───
 REDDIT_CLIENT_ID = os.getenv("REDDIT_CLIENT_ID", "")
 REDDIT_CLIENT_SECRET = os.getenv("REDDIT_CLIENT_SECRET", "")
-REDDIT_USER_AGENT = os.getenv("REDDIT_USER_AGENT", "OpenClaw/3.0")
+REDDIT_USER_AGENT = os.getenv("REDDIT_USER_AGENT", AUTOMATION_USER_AGENT)
 
 REDDIT_SUBREDDITS_MONEY = [
     "sidehustle",
@@ -112,7 +119,7 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 
 # ─── Blog Settings ───
 BLOG_BASE_URL = os.getenv("BLOG_BASE_URL", "https://banglaaihub.com")
-POSTS_PER_RUN = 3
+POSTS_PER_RUN = int(_env("POSTS_PER_RUN", "3"))
 
 # ─── Content Categories ───
 CATEGORIES = {
