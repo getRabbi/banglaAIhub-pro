@@ -53,7 +53,7 @@ export default function BlogPostClient({ post, relatedPosts, trendingPosts }: { 
 
         <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm mb-6 ${cat.badgeClass}`}>{cat.emoji} {cat.label}</div>
 
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight text-white mb-6">{post.bangla_title}</h1>
+        <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold leading-tight text-white mb-6">{post.bangla_title}</h1>
 
         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400 mb-10 pb-8 border-b border-brand-border">
           <time dateTime={post.published_at}>📅 {formatBanglaDate(post.published_at)}</time>
@@ -63,7 +63,7 @@ export default function BlogPostClient({ post, relatedPosts, trendingPosts }: { 
         </div>
 
         {post.thumbnail_url && (
-          <figure className="mb-8 overflow-hidden rounded-2xl border border-brand-border bg-brand-dark">
+          <figure className="mb-8 overflow-hidden rounded-lg border border-brand-border bg-brand-dark">
             <div className="relative aspect-[16/9] w-full">
               <Image src={post.thumbnail_url} alt={post.thumbnail_alt || post.bangla_title} fill sizes="(max-width: 768px) 100vw, 896px" className="object-cover" priority />
             </div>
@@ -71,14 +71,14 @@ export default function BlogPostClient({ post, relatedPosts, trendingPosts }: { 
         )}
 
         {post.bangla_hook && (
-          <div className="mb-8 rounded-2xl border border-brand-blue/25 bg-brand-blue/10 p-5">
+          <div className="mb-8 rounded-lg border border-brand-blue/25 bg-brand-blue/10 p-5">
             <p className="text-xs font-semibold uppercase tracking-wider text-brand-electric mb-2">দ্রুত সারাংশ</p>
             <p className="text-gray-200 leading-8">{post.bangla_hook}</p>
           </div>
         )}
 
         {headings.length >= 3 && (
-          <nav className="mb-10 rounded-2xl border border-brand-border bg-white/[0.03] p-5" aria-label="Article sections">
+          <nav className="mb-10 rounded-lg border border-brand-border bg-white/[0.03] p-5" aria-label="Article sections">
             <p className="text-sm font-semibold text-white mb-3">এই লেখায় যা আছে</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {headings.map((heading) => (
@@ -102,7 +102,7 @@ export default function BlogPostClient({ post, relatedPosts, trendingPosts }: { 
         {/* Share */}
         <div className="glass-card p-6 mt-8">
           <p className="font-semibold text-white mb-3">📢 শেয়ার করুন</p>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`} target="_blank" className="btn-secondary text-sm">Facebook</a>
             <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(post.bangla_title + " " + postUrl)}`} target="_blank" className="btn-secondary text-sm">WhatsApp</a>
             <a href={`https://t.me/share/url?url=${encodeURIComponent(postUrl)}&text=${encodeURIComponent(post.bangla_title)}`} target="_blank" className="btn-secondary text-sm">Telegram</a>

@@ -32,21 +32,20 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen">
       {/* ═══ HERO ═══ */}
-      <section className="relative overflow-hidden border-b border-brand-border">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(59,130,246,0.08),transparent_50%),radial-gradient(ellipse_at_bottom_right,rgba(139,92,246,0.06),transparent_50%)]" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-16 pb-20 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-blue/10 border border-brand-blue/20 text-brand-electric text-sm mb-6">
+      <section className="relative overflow-hidden border-b border-brand-border bg-gradient-to-b from-white/[0.045] to-transparent">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-10 sm:pt-16 pb-14 sm:pb-20 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-blue/10 border border-brand-blue/20 text-brand-electric text-sm font-semibold mb-5 sm:mb-6">
             <span>🤖</span>
             <span>বাংলায় সেরা AI টুলস প্ল্যাটফর্ম</span>
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold mb-5 sm:mb-6">
             <span className="text-white">AI টুলস খুঁজুন,</span><br />
             <span className="gradient-text">অনলাইনে আয় করুন</span>
           </h1>
-          <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-10">৫০০+ AI টুলস রিভিউ, অনলাইন আয়ের প্র্যাক্টিক্যাল গাইড, এবং সেরা ডিলস — সব বাংলায়</p>
-          <form action="/search" method="GET" className="max-w-xl mx-auto relative mb-8">
-            <input name="q" type="text" placeholder="কোন AI টুল খুঁজছেন? যেমন: ChatGPT, ইমেজ জেনারেটর..." className="w-full px-6 py-4 rounded-2xl bg-brand-card border border-brand-border text-white placeholder:text-gray-500 focus:outline-none focus:border-brand-blue/50 focus:ring-2 focus:ring-brand-blue/20 pr-14" />
-            <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-xl bg-brand-blue hover:bg-blue-500 text-white transition-colors">
+          <p className="text-base sm:text-lg text-gray-400 max-w-2xl mx-auto mb-8 sm:mb-10 leading-8">৫০০+ AI টুলস রিভিউ, অনলাইন আয়ের প্র্যাক্টিক্যাল গাইড, এবং সেরা ডিলস — সব বাংলায়</p>
+          <form action="/search" method="GET" className="max-w-xl mx-auto relative mb-6 sm:mb-8">
+            <input name="q" type="text" placeholder="কোন AI টুল খুঁজছেন? যেমন: ChatGPT, ইমেজ জেনারেটর..." className="w-full px-4 sm:px-5 py-4 rounded-lg bg-brand-card border border-brand-border text-white placeholder:text-gray-500 focus:outline-none focus:border-brand-electric/50 focus:ring-2 focus:ring-brand-electric/20 pr-14 shadow-lg shadow-black/10" />
+            <button type="submit" className="absolute right-2.5 top-1/2 -translate-y-1/2 grid h-10 w-10 place-items-center rounded-lg bg-brand-blue hover:bg-blue-500 text-white transition-colors" aria-label="Search">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </button>
           </form>
@@ -149,10 +148,10 @@ export default async function HomePage() {
       {/* ═══ MAKE MONEY CTA ═══ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 border-t border-brand-border">
         <div className="glass-card glow-orange p-8 sm:p-12 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(249,115,22,0.1),transparent_60%)]" />
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-orange via-brand-green to-brand-cyan" />
           <div className="relative z-10 max-w-2xl">
-            <h2 className="text-3xl font-bold text-white mb-4">💰 AI দিয়ে অনলাইনে আয় করুন</h2>
-            <p className="text-gray-400 mb-6">AI টুলস ব্যবহার করে ফ্রিল্যান্সিং, কনটেন্ট তৈরি, এবং প্যাসিভ ইনকাম — সব practical গাইড বাংলায়।</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">💰 AI দিয়ে অনলাইনে আয় করুন</h2>
+            <p className="text-gray-400 mb-6 leading-8">AI টুলস ব্যবহার করে ফ্রিল্যান্সিং, কনটেন্ট তৈরি, এবং প্যাসিভ ইনকাম — সব practical গাইড বাংলায়।</p>
             <Link href="/make-money" className="btn-primary inline-block">আয়ের গাইড দেখুন →</Link>
           </div>
         </div>
@@ -188,12 +187,12 @@ export default async function HomePage() {
       {/* ═══ NEWSLETTER ═══ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 border-t border-brand-border">
         <div className="glass-card glow-blue p-8 sm:p-12 text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.08),transparent_60%)]" />
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-cyan via-brand-blue to-brand-green" />
           <div className="relative z-10">
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">📬 সাপ্তাহিক AI আপডেট</h2>
-            <p className="text-gray-400 mb-6 max-w-md mx-auto">প্রতি সপ্তাহে সেরা AI টুলস, ডিলস এবং আয়ের টিপস আপনার ইনবক্সে।</p>
+            <p className="text-gray-400 mb-6 max-w-md mx-auto leading-8">প্রতি সপ্তাহে সেরা AI টুলস, ডিলস এবং আয়ের টিপস আপনার ইনবক্সে।</p>
             <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-              <input type="email" placeholder="আপনার ইমেইল" className="flex-1 px-4 py-3 rounded-xl bg-brand-navy border border-brand-border text-white placeholder:text-gray-500 focus:outline-none focus:border-brand-blue/50" required />
+              <input type="email" placeholder="আপনার ইমেইল" className="flex-1 px-4 py-3 rounded-lg bg-brand-navy border border-brand-border text-white placeholder:text-gray-500 focus:outline-none focus:border-brand-electric/50" required />
               <button type="submit" className="btn-primary whitespace-nowrap">সাবস্ক্রাইব</button>
             </form>
           </div>

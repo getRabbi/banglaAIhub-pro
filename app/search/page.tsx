@@ -1,5 +1,6 @@
 import { createServerClient } from "@/lib/supabase";
 import Link from "next/link";
+import Image from "next/image";
 import { Metadata } from "next";
 import { PRICING_LABELS } from "@/lib/constants";
 import { getCuratedTools, mergeCuratedTools } from "@/lib/curated-tools";
@@ -26,7 +27,7 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
         <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-xl bg-brand-blue text-white">🔍</button>
       </form>
       {q && <p className="text-gray-400 mb-6">&quot;{q}&quot; — {total}টি ফলাফল</p>}
-      {tools.length > 0 && (<div className="mb-10"><h2 className="text-xl font-bold text-white mb-4">🛠️ টুলস</h2><div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{tools.map((t:any)=>(<Link key={t.id} href={`/tools/${t.slug}`} className="glass-card card-hover p-4 flex items-center gap-3 group"><div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center shrink-0">{t.logo_url?<img src={t.logo_url} alt="" className="w-8 h-8 rounded"/>:<span>🤖</span>}</div><div className="min-w-0"><h3 className="font-semibold text-white group-hover:text-brand-electric transition-colors">{t.name}</h3><p className="text-xs text-gray-500 truncate">{t.tagline_bn}</p></div></Link>))}</div></div>)}
+      {tools.length > 0 && (<div className="mb-10"><h2 className="text-xl font-bold text-white mb-4">🛠️ টুলস</h2><div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{tools.map((t:any)=>(<Link key={t.id} href={`/tools/${t.slug}`} className="glass-card card-hover p-4 flex items-center gap-3 group"><div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center shrink-0">{t.logo_url?<Image src={t.logo_url} alt="" width={32} height={32} className="w-8 h-8 rounded object-contain"/>:<span>🤖</span>}</div><div className="min-w-0"><h3 className="font-semibold text-white group-hover:text-brand-electric transition-colors">{t.name}</h3><p className="text-xs text-gray-500 truncate">{t.tagline_bn}</p></div></Link>))}</div></div>)}
       {posts.length > 0 && (<div><h2 className="text-xl font-bold text-white mb-4">📝 আর্টিকেল</h2><div className="space-y-3">{posts.map((p:any)=>(<Link key={p.id} href={`/blog/${p.blog_slug}`} className="glass-card card-hover p-4 block group"><h3 className="font-semibold text-white group-hover:text-brand-electric transition-colors">{p.bangla_title}</h3><p className="text-sm text-gray-500 line-clamp-1">{p.bangla_hook}</p></Link>))}</div></div>)}
       {q && total===0 && <div className="text-center py-20"><p className="text-4xl mb-4">😔</p><p className="text-gray-400">&quot;{q}&quot; পাওয়া যায়নি</p></div>}
     </div>

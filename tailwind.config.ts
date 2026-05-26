@@ -6,20 +6,23 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        bangla: ["Hind Siliguri", "sans-serif"],
-        display: ["Space Grotesk", "sans-serif"],
+        bangla: ["Noto Sans Bengali", "Hind Siliguri", "system-ui", "sans-serif"],
+        display: ["Space Grotesk", "Noto Sans Bengali", "system-ui", "sans-serif"],
       },
       colors: {
         brand: {
-          navy: "#0a0e1a",
-          dark: "#0d1117",
-          card: "#161b22",
-          border: "#21262d",
+          navy: "#08090d",
+          dark: "#0d0f14",
+          card: "#141720",
+          surface: "#191d28",
+          border: "#242936",
           blue: "#2563eb",
-          cyan: "#06b6d4",
+          cyan: "#22d3ee",
+          electric: "#22d3ee",
           orange: "#f97316",
-          green: "#10b981",
+          green: "#22c55e",
           purple: "#8b5cf6",
+          violet: "#8b5cf6",
         },
       },
       animation: {

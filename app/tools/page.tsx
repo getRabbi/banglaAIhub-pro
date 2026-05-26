@@ -1,5 +1,6 @@
 import { createServerClient } from "@/lib/supabase";
 import Link from "next/link";
+import Image from "next/image";
 import { Metadata } from "next";
 import { PRICING_LABELS, BADGE_LABELS } from "@/lib/constants";
 import { TOOL_USE_CASES, getCuratedTools, mergeCuratedTools } from "@/lib/curated-tools";
@@ -50,7 +51,7 @@ export default async function ToolsPage({ searchParams }: { searchParams: { pric
           <Link key={tool.id} href={`/tools/${tool.slug}`} className="glass-card card-hover p-5 group">
             <div className="flex items-start gap-3 mb-3">
               <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-                {tool.logo_url ? <img src={tool.logo_url} alt="" className="w-9 h-9 rounded-lg" /> : <span className="text-2xl">🤖</span>}
+                {tool.logo_url ? <Image src={tool.logo_url} alt="" width={36} height={36} className="w-9 h-9 rounded-lg object-contain" /> : <span className="text-2xl">🤖</span>}
               </div>
               <div className="min-w-0">
                 <h3 className="font-semibold text-white group-hover:text-brand-electric transition-colors">{tool.name}</h3>

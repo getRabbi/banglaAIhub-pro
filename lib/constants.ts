@@ -13,10 +13,10 @@ export const BLOG_CATEGORIES: Record<string, { label: string; emoji: string; col
 };
 
 export const PRICING_LABELS: Record<string, { label: string; color: string }> = {
-  free: { label: "ফ্রি", color: "emerald" },
-  freemium: { label: "ফ্রিমিয়াম", color: "blue" },
-  paid: { label: "পেইড", color: "orange" },
-  enterprise: { label: "এন্টারপ্রাইজ", color: "purple" },
+  free: { label: "ফ্রি", color: "bg-emerald-500/10 text-emerald-300 border-emerald-500/25" },
+  freemium: { label: "ফ্রিমিয়াম", color: "bg-sky-500/10 text-sky-300 border-sky-500/25" },
+  paid: { label: "পেইড", color: "bg-orange-500/10 text-orange-300 border-orange-500/25" },
+  enterprise: { label: "এন্টারপ্রাইজ", color: "bg-violet-500/10 text-violet-300 border-violet-500/25" },
 };
 
 export const BADGE_LABELS: Record<string, { label: string; emoji: string; icon: string }> = {

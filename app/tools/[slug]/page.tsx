@@ -1,6 +1,7 @@
 import { createServerClient } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Metadata } from "next";
 import { PRICING_LABELS, BADGE_LABELS } from "@/lib/constants";
 import { findCuratedTool } from "@/lib/curated-tools";
@@ -86,7 +87,7 @@ export default async function ToolDetail({ params }: { params: { slug: string } 
           <div>
             <div className="flex items-start gap-4 mb-6">
               <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
-                {tool.logo_url ? <img src={tool.logo_url} alt="" className="w-12 h-12 rounded-xl" /> : <span className="text-3xl">🤖</span>}
+                {tool.logo_url ? <Image src={tool.logo_url} alt="" width={48} height={48} className="w-12 h-12 rounded-lg object-contain" /> : <span className="text-3xl">🤖</span>}
               </div>
               <div>
                 <h1 className="text-3xl font-extrabold text-white">{tool.name}</h1>
@@ -187,7 +188,7 @@ export default async function ToolDetail({ params }: { params: { slug: string } 
                   {alternatives.map((alt: any) => (
                     <Link key={alt.slug} href={`/tools/${alt.slug}`} className="flex items-center gap-3 group">
                       <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-                        {alt.logo_url ? <img src={alt.logo_url} alt="" className="w-6 h-6 rounded" /> : <span>🤖</span>}
+                        {alt.logo_url ? <Image src={alt.logo_url} alt="" width={24} height={24} className="w-6 h-6 rounded object-contain" /> : <span>🤖</span>}
                       </div>
                       <div>
                         <p className="text-sm text-gray-300 group-hover:text-white transition-colors font-medium">{alt.name}</p>

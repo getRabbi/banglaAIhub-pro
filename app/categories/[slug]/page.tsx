@@ -1,6 +1,7 @@
 import { createServerClient } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Metadata } from "next";
 import { PRICING_LABELS, BADGE_LABELS } from "@/lib/constants";
 import { getCuratedTools, mergeCuratedTools } from "@/lib/curated-tools";
@@ -36,7 +37,7 @@ export default async function CategoryDetail({ params }: { params: { slug: strin
         {(tools || []).map((tool: any) => (
           <Link key={tool.id} href={`/tools/${tool.slug}`} className="glass-card card-hover p-5 group">
             <div className="flex items-start gap-3 mb-3">
-              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center shrink-0">{tool.logo_url ? <img src={tool.logo_url} alt="" className="w-8 h-8 rounded" /> : <span>🤖</span>}</div>
+              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center shrink-0">{tool.logo_url ? <Image src={tool.logo_url} alt="" width={32} height={32} className="w-8 h-8 rounded object-contain" /> : <span>🤖</span>}</div>
               <div className="min-w-0"><h3 className="font-semibold text-white group-hover:text-brand-electric transition-colors">{tool.name}</h3><p className="text-xs text-gray-500 truncate">{tool.tagline_bn || tool.tagline}</p></div>
             </div>
             <div className="flex items-center justify-between">
