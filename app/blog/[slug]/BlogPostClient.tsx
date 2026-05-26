@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { SOURCE_MAP, formatBanglaDate, formatBanglaDateShort, formatMarkdown } from "@/lib/constants";
+import { SOURCE_MAP, extractMarkdownHeadings, formatBanglaDate, formatBanglaDateShort, formatMarkdown } from "@/lib/constants";
 const CATEGORY_MAP: Record<string, { label: string; emoji: string; color: string; textClass: string; badgeClass: string }> = {
   "money-making": { label: "অনলাইন আয়", emoji: "💰", color: "emerald", textClass: "text-emerald-400", badgeClass: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" },
   "ai-tools": { label: "AI টুলস", emoji: "🤖", color: "violet", textClass: "text-violet-400", badgeClass: "bg-violet-500/10 border-violet-500/20 text-violet-400" },
@@ -29,6 +29,7 @@ export default function BlogPostClient({ post, relatedPosts, trendingPosts }: { 
   const cat = CATEGORY_MAP[post.category as keyof typeof CATEGORY_MAP] || CATEGORY_MAP["tech-news"];
   const base = typeof window !== "undefined" ? window.location.origin : "";
   const postUrl = `${base}/blog/${post.blog_slug}`;
+  const headings = extractMarkdownHeadings(post.bangla_body).filter((heading) => heading.level === 2).slice(0, 8);
 
   return (
     <div className="min-h-screen">
@@ -69,10 +70,27 @@ export default function BlogPostClient({ post, relatedPosts, trendingPosts }: { 
           </figure>
         )}
 
-        {/* Affiliate disclosure */}
-        <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 mb-8 text-xs text-amber-300/80">⚠️ এই আর্টিকেলে affiliate link থাকতে পারে। বিস্তারিত জানতে <Link href="/disclaimer" className="underline">ডিসক্লেইমার</Link> দেখুন।</div>
+        {post.bangla_hook && (
+          <div className="mb-8 rounded-2xl border border-brand-blue/25 bg-brand-blue/10 p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-brand-electric mb-2">দ্রুত সারাংশ</p>
+            <p className="text-gray-200 leading-8">{post.bangla_hook}</p>
+          </div>
+        )}
 
-        <div className="prose prose-lg prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: formatMarkdown(post.bangla_body) }} />
+        {headings.length >= 3 && (
+          <nav className="mb-10 rounded-2xl border border-brand-border bg-white/[0.03] p-5" aria-label="Article sections">
+            <p className="text-sm font-semibold text-white mb-3">এই লেখায় যা আছে</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {headings.map((heading) => (
+                <a key={heading.id} href={`#${heading.id}`} className="text-sm text-gray-400 hover:text-brand-electric transition-colors">
+                  {heading.text}
+                </a>
+              ))}
+            </div>
+          </nav>
+        )}
+
+        <div className="article-prose max-w-none" dangerouslySetInnerHTML={{ __html: formatMarkdown(post.bangla_body) }} />
 
         {/* Tags */}
         {post.tags?.length > 0 && (

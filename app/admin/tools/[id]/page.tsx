@@ -42,8 +42,8 @@ export default function ToolForm() {
           { label: "Tagline (EN)", key: "tagline", type: "text" },
           { label: "Tagline (BN)", key: "tagline_bn", type: "text" },
           { label: "Website URL", key: "website_url", type: "text" },
-          { label: "Affiliate URL", key: "affiliate_url", type: "text" },
-          { label: "Affiliate Slug (/go/xxx)", key: "affiliate_slug", type: "text" },
+          { label: "Tracked URL", key: "affiliate_url", type: "text" },
+          { label: "Tracking Slug (/go/xxx)", key: "affiliate_slug", type: "text" },
           { label: "Logo URL", key: "logo_url", type: "text" },
         ].map(({ label, key, type }) => (
           <div key={key} className="glass-card p-4">

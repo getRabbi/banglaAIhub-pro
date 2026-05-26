@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { unstable_noStore as noStore } from "next/cache";
 import { PRICING_LABELS, BADGE_LABELS, formatBanglaDateShort } from "@/lib/constants";
+import { getCuratedTools, mergeCuratedTools } from "@/lib/curated-tools";
 import { normalizeBlogPosts, normalizeTools } from "@/lib/schema-normalizers";
 
 export const revalidate = 1800;
@@ -25,7 +26,7 @@ export default async function HomePage() {
     sb.from("categories").select("*").order("sort_order").limit(12),
     sb.from("deals").select("*, tools(name, logo_url)").eq("is_active", true).order("created_at", { ascending: false }).limit(4),
   ]);
-  const featuredTools = normalizeTools(rawFeaturedTools);
+  const featuredTools = mergeCuratedTools(normalizeTools(rawFeaturedTools), getCuratedTools()).slice(0, 8);
   const recentBlog = normalizeBlogPosts(rawRecentBlog);
 
   return (

@@ -2,6 +2,7 @@ import { createServerClient } from "@/lib/supabase";
 import Link from "next/link";
 import { Metadata } from "next";
 import { PRICING_LABELS, BADGE_LABELS } from "@/lib/constants";
+import { TOOL_USE_CASES, getCuratedTools, mergeCuratedTools } from "@/lib/curated-tools";
 import { normalizeTools } from "@/lib/schema-normalizers";
 
 export const metadata: Metadata = { title: "AI টুলস ডিরেক্টরি" };
@@ -13,12 +14,24 @@ export default async function ToolsPage({ searchParams }: { searchParams: { pric
   if (searchParams.pricing) query = query.eq("pricing_type", searchParams.pricing);
   const { data: rawTools } = await query.limit(50);
   const { data: categories } = await sb.from("categories").select("*").order("sort_order");
-  const tools = normalizeTools(rawTools);
+  const dbTools = normalizeTools(rawTools);
+  const tools = mergeCuratedTools(dbTools, getCuratedTools({ pricing: searchParams.pricing })).slice(0, 60);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
       <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-2">🛠️ AI টুলস ডিরেক্টরি</h1>
       <p className="text-gray-400 mb-8">সেরা AI টুলস খুঁজুন, তুলনা করুন এবং ব্যবহার শুরু করুন</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+        {TOOL_USE_CASES.map((item) => (
+          <Link key={item.key} href={`/search?q=${encodeURIComponent(item.query)}`} className="rounded-xl border border-brand-border bg-white/[0.03] p-4 hover:bg-white/[0.06] transition-colors">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xl">{item.icon}</span>
+              <span className="font-semibold text-white">{item.label}</span>
+            </div>
+            <p className="text-xs text-gray-500 leading-5">{item.hint}</p>
+          </Link>
+        ))}
+      </div>
       <div className="flex flex-wrap gap-2 mb-6">
         <Link href="/tools" className={`px-3 py-1.5 text-sm rounded-full border transition-all ${!searchParams.pricing ? "bg-white/10 text-white border-white/20" : "text-gray-500 border-brand-border hover:bg-white/5"}`}>সব</Link>
         {Object.entries(PRICING_LABELS).map(([key, val]) => (

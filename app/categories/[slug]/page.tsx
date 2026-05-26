@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Metadata } from "next";
 import { PRICING_LABELS, BADGE_LABELS } from "@/lib/constants";
+import { getCuratedTools, mergeCuratedTools } from "@/lib/curated-tools";
 import { normalizeTools } from "@/lib/schema-normalizers";
 
 export const revalidate = 3600;
@@ -18,7 +19,7 @@ export default async function CategoryDetail({ params }: { params: { slug: strin
   if (!category) notFound();
 
   const { data: rawTools } = await sb.from("tools").select("*").eq("category_id", category.id).eq("status", "published").order("view_count", { ascending: false });
-  const tools = normalizeTools(rawTools);
+  const tools = mergeCuratedTools(normalizeTools(rawTools), getCuratedTools({ categorySlug: params.slug }));
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">

@@ -26,7 +26,7 @@ export default async function AdminAnalytics() {
         {[
           { l: "Blog Views", v: totalViews, c: "text-blue-400" },
           { l: "Tool Views", v: toolViews, c: "text-violet-400" },
-          { l: "Affiliate Clicks", v: toolClicks, c: "text-amber-400" },
+          { l: "Tracked Clicks", v: toolClicks, c: "text-amber-400" },
           { l: "Clicks (30d)", v: clicks30 || 0, c: "text-green-400" },
         ].map(s => (
           <div key={s.l} className="glass-card p-4"><p className={`text-2xl font-bold ${s.c}`}>{s.v.toLocaleString()}</p><p className="text-xs text-gray-500">{s.l}</p></div>

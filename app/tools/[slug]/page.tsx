@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Metadata } from "next";
 import { PRICING_LABELS, BADGE_LABELS } from "@/lib/constants";
+import { findCuratedTool } from "@/lib/curated-tools";
 import { normalizeTool, normalizeTools } from "@/lib/schema-normalizers";
 
 export const revalidate = 3600;
@@ -10,34 +11,41 @@ export const revalidate = 3600;
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const sb = createServerClient();
   const { data: tool } = await sb.from("tools").select("name, tagline_bn, slug").eq("slug", params.slug).single();
-  if (!tool) return { title: "টুল পাওয়া যায়নি" };
+  const curated = tool ? null : findCuratedTool(params.slug);
+  if (!tool && !curated) return { title: "টুল পাওয়া যায়নি" };
+  const item = tool || curated!;
   const base = process.env.NEXT_PUBLIC_BASE_URL || "https://banglaaihub.com";
   return {
-    title: `${tool.name} — রিভিউ ও বিস্তারিত`,
-    description: tool.tagline_bn || `${tool.name} AI tool review in Bangla`,
-    openGraph: { title: tool.name, description: tool.tagline_bn, url: `${base}/tools/${tool.slug}`, images: [`${base}/api/og/${tool.slug}`] },
+    title: `${item.name} — রিভিউ ও বিস্তারিত`,
+    description: item.tagline_bn || `${item.name} AI tool review in Bangla`,
+    openGraph: { title: item.name, description: item.tagline_bn, url: `${base}/tools/${item.slug}`, images: [`${base}/api/og/${item.slug}`] },
   };
 }
 
 export default async function ToolDetail({ params }: { params: { slug: string } }) {
   const sb = createServerClient();
   const { data: rawTool } = await sb.from("tools").select("*, categories(name_bn, slug, icon)").eq("slug", params.slug).eq("status", "published").single();
-  if (!rawTool) notFound();
-  const tool = normalizeTool(rawTool);
+  const curatedTool = rawTool ? null : findCuratedTool(params.slug);
+  if (!rawTool && !curatedTool) notFound();
+  const tool = rawTool ? normalizeTool(rawTool) : curatedTool!;
 
-  try {
-    await sb.rpc("increment_view", { tbl: "tools", slug_val: params.slug });
-  } catch {
-    // View counts should not block page rendering.
+  if (rawTool) {
+    try {
+      await sb.rpc("increment_view", { tbl: "tools", slug_val: params.slug });
+    } catch {
+      // View counts should not block page rendering.
+    }
   }
 
   // Alternatives
-  const { data: altLinks } = await sb.from("tool_alternatives").select("alternative_id").eq("tool_id", tool.id);
   let alternatives: any[] = [];
-  if (altLinks && altLinks.length > 0) {
-    const ids = altLinks.map((a: any) => a.alternative_id);
-    const { data } = await sb.from("tools").select("name, slug, logo_url, pricing_type, tagline_bn, status").in("id", ids).eq("status", "published");
-    alternatives = normalizeTools(data);
+  if (rawTool) {
+    const { data: altLinks } = await sb.from("tool_alternatives").select("alternative_id").eq("tool_id", tool.id);
+    if (altLinks && altLinks.length > 0) {
+      const ids = altLinks.map((a: any) => a.alternative_id);
+      const { data } = await sb.from("tools").select("name, slug, logo_url, pricing_type, tagline_bn, status").in("id", ids).eq("status", "published");
+      alternatives = normalizeTools(data);
+    }
   }
 
   const faq = tool.faq || [];
@@ -151,8 +159,6 @@ export default async function ToolDetail({ params }: { params: { slug: string } 
               </div>
             )}
 
-            {/* Affiliate disclosure */}
-            <p className="text-xs text-gray-600 italic">⚠️ এই পেজে affiliate link থাকতে পারে। আপনি যদি এই লিংক দিয়ে কিনেন, আমরা কমিশন পেতে পারি।</p>
           </div>
 
           {/* ─── Sidebar ─── */}

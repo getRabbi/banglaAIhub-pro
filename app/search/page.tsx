@@ -2,6 +2,7 @@ import { createServerClient } from "@/lib/supabase";
 import Link from "next/link";
 import { Metadata } from "next";
 import { PRICING_LABELS } from "@/lib/constants";
+import { getCuratedTools, mergeCuratedTools } from "@/lib/curated-tools";
 import { normalizeBlogPosts, normalizeTools } from "@/lib/schema-normalizers";
 export const metadata: Metadata = { title: "সার্চ" };
 export default async function SearchPage({ searchParams }: { searchParams: { q?: string } }) {
@@ -13,7 +14,7 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
       sb.from("tools").select("id,name,slug,tagline_bn,pricing_type,logo_url,status").eq("status", "published").or(`name.ilike.%${q}%,tagline_bn.ilike.%${q}%,description_bn.ilike.%${q}%`).limit(12),
       sb.from("blog_posts").select("id,title,slug,excerpt_bn,content_bn,source_platform,tags,category_id,reading_time_minutes,view_count,published_at,created_at,categories(slug)").eq("status","published").or(`title.ilike.%${q}%,excerpt_bn.ilike.%${q}%,content_bn.ilike.%${q}%`).limit(12),
     ]);
-    tools = normalizeTools(t);
+    tools = mergeCuratedTools(normalizeTools(t), getCuratedTools({ query: q })).slice(0, 12);
     posts = normalizeBlogPosts(p);
   }
   const total = tools.length + posts.length;

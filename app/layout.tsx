@@ -81,7 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <p className="text-xs text-gray-600">© {new Date().getFullYear()} BanglaAIHub। সর্বস্বত্ব সংরক্ষিত।</p>
               <div className="flex items-center gap-4">
                 <Link href="/feed.xml" className="text-xs text-gray-600 hover:text-gray-400">RSS</Link>
-                <span className="text-xs text-gray-600">এই সাইটে affiliate link আছে।</span>
+                <Link href="/contact" className="text-xs text-gray-600 hover:text-gray-400">যোগাযোগ</Link>
               </div>
             </div>
           </div>

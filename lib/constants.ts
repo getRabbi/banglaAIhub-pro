@@ -50,21 +50,165 @@ export function estimateReadTime(text: string): number {
   return Math.max(1, Math.round(text.split(/\s+/).length / 180));
 }
 
-// Simple markdown to HTML
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function escapeAttr(value: string): string {
+  return escapeHtml(value).replace(/`/g, "&#96;");
+}
+
+function stripMarkdown(value: string): string {
+  return value
+    .replace(/[`*_~>#-]/g, "")
+    .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function headingId(text: string): string {
+  const base = stripMarkdown(text)
+    .toLowerCase()
+    .replace(/[^a-z0-9\u0980-\u09FF]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64);
+  return base || `section-${Math.abs(text.split("").reduce((sum, ch) => sum + ch.charCodeAt(0), 0))}`;
+}
+
+function renderInline(value: string): string {
+  let html = escapeHtml(value);
+  html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+  html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  html = html.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+  html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+|\/[^)\s]*)\)/g, (_match, label, href) => {
+    const safeHref = String(href).replace(/&amp;/g, "&");
+    return `<a href="${escapeAttr(safeHref)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+  });
+  return html;
+}
+
+function splitTableRow(line: string): string[] {
+  return line
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((cell) => cell.trim());
+}
+
+function isTableDivider(line: string): boolean {
+  return /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line);
+}
+
+export function extractMarkdownHeadings(md: string): { id: string; text: string; level: number }[] {
+  return (md || "")
+    .split(/\r?\n/)
+    .map((line) => line.match(/^(#{2,3})\s+(.+)$/))
+    .filter(Boolean)
+    .map((match) => {
+      const [, marks, text] = match as RegExpMatchArray;
+      const cleanText = stripMarkdown(text);
+      return { id: headingId(cleanText), text: cleanText, level: marks.length };
+    });
+}
+
 export function mdToHtml(md: string): string {
-  return md
-    .replace(/^### (.+)$/gm, "<h3>$1</h3>")
-    .replace(/^## (.+)$/gm, "<h2>$1</h2>")
-    .replace(/^# (.+)$/gm, "<h1>$1</h1>")
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.+?)\*/g, "<em>$1</em>")
-    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
-    .replace(/^> (.+)$/gm, "<blockquote>$1</blockquote>")
-    .replace(/^- (.+)$/gm, "<li>$1</li>")
-    .replace(/(<li>.*<\/li>\n?)+/g, (m) => `<ul>${m}</ul>`)
-    .split("\n\n")
-    .map((p) => (p.startsWith("<h") || p.startsWith("<ul") || p.startsWith("<blockquote") ? p : `<p>${p.replace(/\n/g, "<br/>")}</p>`))
-    .join("\n");
+  const lines = (md || "").replace(/\r\n/g, "\n").trim().split("\n");
+  const html: string[] = [];
+  let paragraph: string[] = [];
+  let listType: "ul" | "ol" | null = null;
+  let listItems: string[] = [];
+
+  const flushParagraph = () => {
+    if (!paragraph.length) return;
+    html.push(`<p>${renderInline(paragraph.join(" ").replace(/\s+/g, " ").trim())}</p>`);
+    paragraph = [];
+  };
+
+  const flushList = () => {
+    if (!listType || !listItems.length) return;
+    html.push(`<${listType}>${listItems.map((item) => `<li>${renderInline(item)}</li>`).join("")}</${listType}>`);
+    listType = null;
+    listItems = [];
+  };
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const raw = lines[i];
+    const line = raw.trim();
+
+    if (!line) {
+      flushParagraph();
+      flushList();
+      continue;
+    }
+
+    const heading = line.match(/^(#{1,3})\s+(.+)$/);
+    if (heading) {
+      flushParagraph();
+      flushList();
+      const level = Math.min(3, heading[1].length);
+      const text = stripMarkdown(heading[2]);
+      html.push(`<h${level} id="${escapeAttr(headingId(text))}">${renderInline(text)}</h${level}>`);
+      continue;
+    }
+
+    if (line.includes("|") && lines[i + 1] && isTableDivider(lines[i + 1])) {
+      flushParagraph();
+      flushList();
+      const headers = splitTableRow(line);
+      i += 2;
+      const rows: string[][] = [];
+      while (i < lines.length && lines[i].includes("|") && lines[i].trim()) {
+        rows.push(splitTableRow(lines[i]));
+        i += 1;
+      }
+      i -= 1;
+      html.push(
+        `<div class="table-scroll"><table><thead><tr>${headers.map((cell) => `<th>${renderInline(cell)}</th>`).join("")}</tr></thead><tbody>${rows
+          .map((row) => `<tr>${headers.map((_, index) => `<td>${renderInline(row[index] || "")}</td>`).join("")}</tr>`)
+          .join("")}</tbody></table></div>`,
+      );
+      continue;
+    }
+
+    const quote = line.match(/^>\s+(.+)$/);
+    if (quote) {
+      flushParagraph();
+      flushList();
+      html.push(`<blockquote>${renderInline(quote[1])}</blockquote>`);
+      continue;
+    }
+
+    const bullet = line.match(/^[-*]\s+(.+)$/);
+    if (bullet) {
+      flushParagraph();
+      if (listType !== "ul") flushList();
+      listType = "ul";
+      listItems.push(bullet[1]);
+      continue;
+    }
+
+    const numbered = line.match(/^\d+\.\s+(.+)$/);
+    if (numbered) {
+      flushParagraph();
+      if (listType !== "ol") flushList();
+      listType = "ol";
+      listItems.push(numbered[1]);
+      continue;
+    }
+
+    flushList();
+    paragraph.push(line);
+  }
+
+  flushParagraph();
+  flushList();
+  return html.join("\n");
 }
 
 export const formatMarkdown = mdToHtml;

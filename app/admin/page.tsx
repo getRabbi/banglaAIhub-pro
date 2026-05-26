@@ -18,14 +18,14 @@ export default async function AdminDashboard() {
   const { data: viewData } = await sb.from("blog_posts").select("view_count").eq("status", "published");
   const totalViews = (viewData || []).reduce((s: number, p: any) => s + (p.view_count || 0), 0);
 
-  // Affiliate clicks last 30d
+  // Tracked clicks last 30d
   const { count: affClicks } = await sb.from("affiliate_clicks").select("*", { count: "exact", head: true }).gte("clicked_at", new Date(Date.now() - 30 * 86400000).toISOString());
 
   const stats = [
     { label: "মোট পোস্ট", value: totalPosts || 0, icon: "📝", color: "text-blue-400", href: "/admin/posts" },
     { label: "মোট টুলস", value: totalTools || 0, icon: "🛠️", color: "text-violet-400", href: "/admin/tools" },
     { label: "মোট ভিউ", value: totalViews, icon: "👁", color: "text-green-400", href: "/admin/analytics" },
-    { label: "Affiliate Clicks (30d)", value: affClicks || 0, icon: "🔗", color: "text-amber-400", href: "/admin/affiliate-links" },
+    { label: "Tracked Clicks (30d)", value: affClicks || 0, icon: "🔗", color: "text-amber-400", href: "/admin/affiliate-links" },
     { label: "সাবস্ক্রাইবার", value: totalSubs || 0, icon: "📧", color: "text-pink-400", href: "/admin/newsletter" },
     { label: "Pending Queue", value: pendingQueue || 0, icon: "🤖", color: "text-orange-400", href: "/admin/scrape-queue" },
   ];

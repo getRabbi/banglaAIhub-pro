@@ -32,6 +32,9 @@ Editorial rules:
 - Use a confident but not spammy tone. Hype is allowed only when backed by a practical reason.
 - Include a quick answer section, actionable checklist, limitations, and FAQ.
 - Use **bold** for key terms and `##` headings.
+- Avoid wall-of-text: keep paragraphs short, add blank lines between sections, and use bullets when listing steps.
+- Include one compact markdown table when it helps compare tools, use cases, risks, or action steps.
+- Add internal-style section labels such as "Quick answer", "কীভাবে শুরু করবেন", "সুবিধা/ঝুঁকি", and "FAQ" so the web renderer can build a readable article.
 """
 
 
@@ -91,6 +94,13 @@ def _github_template(title: str, body: str, category: str) -> dict:
     body_bn = f"""আপনি যদি AI tool, automation, coding workflow বা client project নিয়ে কাজ করেন, তাহলে সব সমস্যার সমাধান paid SaaS দিয়ে করা সবসময় smart decision নয়। অনেক সময় একটি ভালো **open-source repository** কম খরচে prototype বানাতে, self-host করতে এবং নিজের use case অনুযায়ী customize করতে বেশি কাজে লাগে। আজকের spotlight: **{repo}**।
 
 > Quick answer: {repo} তাদের জন্য বেশি useful যারা ready-made paid tool কেনার আগে low-cost, customizable এবং learning-friendly option test করতে চান।
+
+| বিষয় | কী দেখবেন |
+|---|---|
+| Best fit | freelancer, developer, small agency, founder |
+| Use case | prototype, automation, client demo, learning |
+| Risk | setup effort, security, maintenance |
+| Next step | README পড়ে ছোট test project চালান |
 
 ## এই repo-টা কী এবং কেন trend-worthy
 
@@ -178,6 +188,13 @@ def _general_template(title: str, body: str, source: str, category: str) -> dict
     body_bn = f"""**{clean}** নিয়ে headline দেখলেই অনেকে দ্রুত opinion বানিয়ে ফেলেন। কিন্তু company-level decision নেওয়ার জন্য headline যথেষ্ট নয়। দরকার হলো: বিষয়টা কার জন্য গুরুত্বপূর্ণ, এখন কেন relevant, কীভাবে কাজে লাগানো যায় এবং কোথায় risk আছে। {intro_angle}
 
 > Quick answer: এই topic-টি follow করার মতো, যদি আপনি developer workflow, AI automation, freelancing service, product decision বা tech learning roadmap নিয়ে serious হন।
+
+| বিষয় | Practical takeaway |
+|---|---|
+| কার জন্য | freelancer, developer, creator, founder |
+| কাজে লাগবে | skill, workflow, client offer, product decision |
+| সতর্কতা | hype দেখে decision নয়, আগে ছোট test |
+| Next step | demo বানিয়ে result note করুন |
 
 ## কী ঘটেছে সংক্ষেপে
 

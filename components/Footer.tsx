@@ -67,12 +67,8 @@ export default function Footer() {
           ))}
         </div>
 
-        {/* Affiliate disclosure */}
         <div className="mt-10 pt-6 border-t border-brand-border">
-          <p className="text-xs text-gray-600 text-center">
-            ⚠️ এই সাইটে affiliate link আছে। আপনি যদি এই লিংকের মাধ্যমে কোনো প্রোডাক্ট কেনেন, আমরা একটি কমিশন পেতে পারি — আপনার কোনো অতিরিক্ত খরচ হবে না।
-          </p>
-          <p className="text-xs text-gray-700 text-center mt-2">
+          <p className="text-xs text-gray-700 text-center">
             © {new Date().getFullYear()} BanglaAIHub। সর্বস্বত্ব সংরক্ষিত।
           </p>
         </div>

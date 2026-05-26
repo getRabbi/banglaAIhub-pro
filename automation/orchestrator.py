@@ -15,6 +15,7 @@ from agents import (
     scrape_hackernews,
     scrape_github_repos,
     scrape_producthunt,
+    generate_daily_income_topic,
     rewrite_to_bangla,
     publish_to_blog,
     get_unpublished_to_fb,
@@ -66,6 +67,10 @@ def run_pipeline():
             stats["errors"].append(f"{name}: {e}")
             print(f"  {name}: ERROR — {e}")
 
+    daily_income = generate_daily_income_topic()
+    all_posts.append(daily_income)
+    print("  Daily income seed: 1")
+
     stats["scraped"] = len(all_posts)
 
     if not all_posts:
@@ -78,16 +83,36 @@ def run_pipeline():
     print("\n🔍 Phase 2: Dedup...")
     all_posts.sort(key=lambda x: x.get("engagement_score", 0), reverse=True)
 
-    unique = []
+    candidates = []
+    candidate_limit = max(POSTS_PER_RUN * 4, POSTS_PER_RUN)
     for post in all_posts:
         body = post.get("original_body", post.get("original_title", ""))
         h = content_hash(body)
         if is_duplicate(supabase, h, post):
             stats["dupes"] += 1
             continue
-        unique.append(post)
+        candidates.append(post)
+        if len(candidates) >= candidate_limit:
+            break
+
+    unique = []
+    money_post = next(
+        (
+            post
+            for post in candidates
+            if detect_category(post["source"], post.get("original_title", ""), post.get("original_body", "")) == "money-making"
+        ),
+        None,
+    )
+    if money_post:
+        unique.append(money_post)
+
+    for post in candidates:
         if len(unique) >= POSTS_PER_RUN:
             break
+        if post is money_post:
+            continue
+        unique.append(post)
 
     print(f"  Unique: {len(unique)} | Dupes skipped: {stats['dupes']}")
 

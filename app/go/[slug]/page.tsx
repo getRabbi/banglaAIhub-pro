@@ -1,6 +1,6 @@
 import { createServerClient } from "@/lib/supabase";
 import { redirect } from "next/navigation";
-export default async function AffiliateRedirect({ params }: { params: { slug: string } }) {
+export default async function TrackedRedirect({ params }: { params: { slug: string } }) {
   const sb = createServerClient();
   const { data: dest } = await sb.rpc("track_affiliate_click", { link_slug: params.slug });
   if (dest) redirect(dest);

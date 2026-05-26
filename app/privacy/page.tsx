@@ -10,8 +10,6 @@ export default function PrivacyPage() {
         <p>আমরা আপনার ব্রাউজিং তথ্য (পেজ ভিউ, ক্লিক) এনালিটিক্সের জন্য সংগ্রহ করি। নিউজলেটারে সাবস্ক্রাইব করলে আপনার ইমেইল সংরক্ষণ করি।</p>
         <h2 className="text-xl font-bold text-white">কুকিজ</h2>
         <p>আমাদের সাইটে কুকিজ ব্যবহার করা হয় আপনার ব্রাউজিং অভিজ্ঞতা উন্নত করতে।</p>
-        <h2 className="text-xl font-bold text-white">Affiliate Links</h2>
-        <p>আমাদের সাইটে affiliate link আছে। আপনি এই লিংকের মাধ্যমে কিছু কিনলে আমরা কমিশন পেতে পারি। এতে আপনার কোনো অতিরিক্ত খরচ হয় না।</p>
         <h2 className="text-xl font-bold text-white">তথ্য শেয়ারিং</h2>
         <p>আমরা আপনার ব্যক্তিগত তথ্য তৃতীয় পক্ষের কাছে বিক্রি করি না।</p>
         <h2 className="text-xl font-bold text-white">যোগাযোগ</h2>

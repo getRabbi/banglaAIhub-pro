@@ -16,7 +16,7 @@ export default async function MakeMoneyPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
       <div className="glass-card glow-orange p-8 mb-10 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(249,115,22,0.1),transparent_60%)]" />
-        <div className="relative"><h1 className="text-3xl font-extrabold text-white mb-2">💰 AI দিয়ে অনলাইনে আয় করুন</h1><p className="text-gray-400">ফ্রিল্যান্সিং, কনটেন্ট, অ্যাফিলিয়েট — practical গাইড বাংলায়</p></div>
+        <div className="relative"><h1 className="text-3xl font-extrabold text-white mb-2">💰 AI দিয়ে অনলাইনে আয় করুন</h1><p className="text-gray-400">ফ্রিল্যান্সিং, কনটেন্ট মনিটাইজেশন, ডিজিটাল সার্ভিস — practical গাইড বাংলায়</p></div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {(posts || []).map((p: any) => (

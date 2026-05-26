@@ -6,7 +6,7 @@ Complete Next.js 14 platform + Python automation. Deploy to Vercel, connect Supa
 
 ### Frontend (Next.js 14 + Tailwind)
 - **Homepage** — hero, trending tools, categories, blog, deals, newsletter
-- **Tools Directory** — `/tools` listing + `/tools/[slug]` detail with affiliate CTA, alternatives, FAQ, schema
+- **Tools Directory** — `/tools` listing + `/tools/[slug]` detail with tracked CTA, alternatives, FAQ, schema
 - **Blog** — `/blog` with category filter + trending sidebar + `/blog/[slug]` with reading progress, related posts, share
 - **Categories** — listing + detail with tools
 - **Compare, Top Lists, Guides** — listing + detail pages
@@ -17,7 +17,7 @@ Complete Next.js 14 platform + Python automation. Deploy to Vercel, connect Supa
 - **Search** — full-text search across tools + blog
 - **Glossary** — Bangla AI terminology
 - **AI Tool Finder** — conversational quiz
-- **Affiliate Cloaking** — `/go/[slug]` with click tracking
+- **Tracked Redirects** — `/go/[slug]` with click tracking
 - **Newsletter** — signup page
 - **Static Pages** — About, Contact, Privacy, Disclaimer, 404
 
@@ -38,7 +38,7 @@ Complete Next.js 14 platform + Python automation. Deploy to Vercel, connect Supa
 - `/feed.xml` — RSS
 
 ### Database (Supabase — 22 tables)
-categories, tools, tool_alternatives, comparisons, top_lists, guides, blog_posts, deals, prompts, workflows, affiliate_links, affiliate_clicks, scrape_queue, published_topics, social_posts, newsletter_subscribers, analytics_events, openclaw_jobs, openclaw_job_logs, site_settings, glossary, resources
+categories, tools, tool_alternatives, comparisons, top_lists, guides, blog_posts, deals, prompts, workflows, tracked link tables, scrape_queue, published_topics, social_posts, newsletter_subscribers, analytics_events, openclaw_jobs, openclaw_job_logs, site_settings, glossary, resources
 
 ### Python Automation (OpenClaw)
 - Reddit (16 subreddits) + X/Twitter + Hacker News + Product Hunt scraping
@@ -109,7 +109,7 @@ banglaaihub/
 │   ├── find-tool/, glossary/, search/
 │   ├── newsletter/, about/, contact/
 │   ├── privacy/, disclaimer/
-│   ├── go/[slug]/ (affiliate redirect)
+│   ├── go/[slug]/ (tracked redirect)
 │   ├── feed.xml/, sitemap.ts, robots.ts
 │   ├── not-found.tsx
 │   └── api/ (views, analytics, og, health, search)

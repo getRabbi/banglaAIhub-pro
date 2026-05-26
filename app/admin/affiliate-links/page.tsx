@@ -13,7 +13,7 @@ export default async function AdminAffiliateLinks() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-6">🔗 Affiliate Links</h1>
+      <h1 className="text-2xl font-bold text-white mb-6">🔗 Tracked Links</h1>
       <div className="glass-card overflow-x-auto">
         <table className="w-full text-sm">
           <thead><tr className="border-b border-brand-border text-left text-gray-500"><th className="px-4 py-3">Tool</th><th className="px-4 py-3">Slug (/go/xxx)</th><th className="px-4 py-3">Total Clicks</th><th className="px-4 py-3">Last 30d</th><th className="px-4 py-3">Active</th></tr></thead>
@@ -29,7 +29,7 @@ export default async function AdminAffiliateLinks() {
             ))}
           </tbody>
         </table>
-        {(!links || links.length === 0) && <p className="text-center text-gray-600 py-10">কোনো affiliate link নেই</p>}
+        {(!links || links.length === 0) && <p className="text-center text-gray-600 py-10">কোনো tracked link নেই</p>}
       </div>
     </div>
   );

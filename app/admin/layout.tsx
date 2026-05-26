@@ -15,7 +15,7 @@ const SIDEBAR = [
   { href: "/admin/top-lists", icon: "🏆", label: "Top Lists" },
   { href: "/admin/deals", icon: "🔥", label: "Deals" },
   { href: "/admin/social-posts", icon: "📣", label: "Social Posts" },
-  { href: "/admin/affiliate-links", icon: "🔗", label: "Affiliate Links" },
+  { href: "/admin/affiliate-links", icon: "🔗", label: "Tracked Links" },
   { href: "/admin/newsletter", icon: "📧", label: "Newsletter" },
   { href: "/admin/calendar", icon: "📅", label: "Calendar" },
   { href: "/admin/analytics", icon: "📈", label: "Analytics" },

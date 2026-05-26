@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   const catStats: Record<string, { count: number; views: number }> = {};
   p.forEach(x => { if (!catStats[x.category]) catStats[x.category] = { count: 0, views: 0 }; catStats[x.category].count++; catStats[x.category].views += x.view_count || 0; });
   return NextResponse.json({
-    overview: { total_posts: p.length, total_post_views: p.reduce((s, x) => s + (x.view_count || 0), 0), total_tools: t.length, total_tool_views: t.reduce((s, x) => s + (x.view_count || 0), 0), affiliate_clicks_30d: (clicks || []).length, fb_posted: 0 },
+    overview: { total_posts: p.length, total_post_views: p.reduce((s, x) => s + (x.view_count || 0), 0), total_tools: t.length, total_tool_views: t.reduce((s, x) => s + (x.view_count || 0), 0), tracked_clicks_30d: (clicks || []).length, fb_posted: 0 },
     category_breakdown: catStats,
     generated_at: new Date().toISOString(),
   });
