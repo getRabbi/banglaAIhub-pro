@@ -4,6 +4,7 @@ import Image from "next/image";
 import { unstable_noStore as noStore } from "next/cache";
 import { PRICING_LABELS, BADGE_LABELS, formatBanglaDateShort } from "@/lib/constants";
 import { getCuratedTools, mergeCuratedTools } from "@/lib/curated-tools";
+import { mergeCuratedDeals } from "@/lib/curated-deals";
 import { normalizeBlogPosts, normalizeTools } from "@/lib/schema-normalizers";
 
 export const revalidate = 1800;
@@ -28,6 +29,7 @@ export default async function HomePage() {
   ]);
   const featuredTools = mergeCuratedTools(normalizeTools(rawFeaturedTools), getCuratedTools()).slice(0, 8);
   const recentBlog = normalizeBlogPosts(rawRecentBlog);
+  const activeDeals = mergeCuratedDeals(deals).slice(0, 4);
 
   return (
     <div className="min-h-screen">
@@ -158,14 +160,14 @@ export default async function HomePage() {
       </section>
 
       {/* ═══ DEALS ═══ */}
-      {deals && deals.length > 0 && (
+      {activeDeals.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 border-t border-brand-border">
           <div className="flex items-center justify-between mb-8">
             <h2 className="section-title">🔥 সেরা ডিলস</h2>
             <Link href="/deals" className="text-sm text-brand-electric hover:underline">সব দেখুন →</Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {deals.map((deal: any) => (
+            {activeDeals.map((deal: any) => (
               <div key={deal.id} className="glass-card card-hover p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-2xl">🏷️</span>
