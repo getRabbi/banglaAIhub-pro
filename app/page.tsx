@@ -69,7 +69,7 @@ export default async function HomePage() {
               <Link key={cat.id} href={`/categories/${cat.slug}`} className="glass-card card-hover p-4 text-center group">
                 <span className="text-3xl block mb-2">{cat.icon}</span>
                 <p className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">{cat.name_bn}</p>
-                <p className="text-xs text-gray-600 mt-1">{cat.tool_count} টুল</p>
+                <p className="text-xs text-gray-600 mt-1">{Math.max(cat.tool_count || 0, getCuratedTools({ categorySlug: cat.slug }).length)} টুল</p>
               </Link>
             ))}
           </div>

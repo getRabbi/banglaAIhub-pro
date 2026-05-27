@@ -19,7 +19,12 @@ export default async function CategoryDetail({ params }: { params: { slug: strin
   const { data: category } = await sb.from("categories").select("*").eq("slug", params.slug).single();
   if (!category) notFound();
 
-  const { data: rawTools } = await sb.from("tools").select("*").eq("category_id", category.id).eq("status", "published").order("view_count", { ascending: false });
+  const { data: allCategories } = await sb.from("categories").select("id, slug");
+  const categoryIds = params.slug === "ai-tools"
+    ? (allCategories || []).filter((item: any) => String(item.slug || "").startsWith("ai-")).map((item: any) => item.id)
+    : [category.id];
+  const toolQuery = sb.from("tools").select("*").eq("status", "published").order("view_count", { ascending: false });
+  const { data: rawTools } = categoryIds.length > 1 ? await toolQuery.in("category_id", categoryIds) : await toolQuery.eq("category_id", category.id);
   const tools = mergeCuratedTools(normalizeTools(rawTools), getCuratedTools({ categorySlug: params.slug }));
 
   return (
@@ -31,7 +36,7 @@ export default async function CategoryDetail({ params }: { params: { slug: strin
       </nav>
       <div className="flex items-center gap-3 mb-8">
         <span className="text-4xl">{category.icon}</span>
-        <div><h1 className="text-3xl font-extrabold text-white">{category.name_bn}</h1><p className="text-gray-400">{category.description_bn}</p></div>
+        <div><h1 className="text-3xl font-extrabold text-white">{category.name_bn}</h1><p className="text-gray-400">{category.description_bn}</p><p className="text-xs text-gray-600 mt-2">{tools.length} টুল পাওয়া গেছে</p></div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {(tools || []).map((tool: any) => (
