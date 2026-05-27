@@ -11,20 +11,27 @@ export const revalidate = 3600;
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const { data } = await createServerClient().from("categories").select("name_bn").eq("slug", params.slug).single();
+  if (!data && params.slug === "ai-tools") return { title: "AI টুলস" };
   return { title: data?.name_bn || "ক্যাটাগরি" };
 }
 
 export default async function CategoryDetail({ params }: { params: { slug: string } }) {
   const sb = createServerClient();
   const { data: category } = await sb.from("categories").select("*").eq("slug", params.slug).single();
-  if (!category) notFound();
+  const fallbackCategory = params.slug === "ai-tools"
+    ? { id: "ai-tools", slug: "ai-tools", name_bn: "AI টুলস", icon: "🤖", description_bn: "সব ধরনের জনপ্রিয় AI টুল একসাথে দেখুন" }
+    : null;
+  const activeCategory = category || fallbackCategory;
+  if (!activeCategory) notFound();
 
   const { data: allCategories } = await sb.from("categories").select("id, slug");
   const categoryIds = params.slug === "ai-tools"
     ? (allCategories || []).filter((item: any) => String(item.slug || "").startsWith("ai-")).map((item: any) => item.id)
-    : [category.id];
+    : [activeCategory.id];
   const toolQuery = sb.from("tools").select("*").eq("status", "published").order("view_count", { ascending: false });
-  const { data: rawTools } = categoryIds.length > 1 ? await toolQuery.in("category_id", categoryIds) : await toolQuery.eq("category_id", category.id);
+  const { data: rawTools } = categoryIds.length > 1
+    ? await toolQuery.in("category_id", categoryIds)
+    : category ? await toolQuery.eq("category_id", category.id) : { data: [] };
   const tools = mergeCuratedTools(normalizeTools(rawTools), getCuratedTools({ categorySlug: params.slug }));
 
   return (
@@ -32,11 +39,11 @@ export default async function CategoryDetail({ params }: { params: { slug: strin
       <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
         <Link href="/" className="hover:text-gray-300">হোম</Link><span>/</span>
         <Link href="/categories" className="hover:text-gray-300">ক্যাটাগরি</Link><span>/</span>
-        <span className="text-gray-400">{category.name_bn}</span>
+        <span className="text-gray-400">{activeCategory.name_bn}</span>
       </nav>
       <div className="flex items-center gap-3 mb-8">
-        <span className="text-4xl">{category.icon}</span>
-        <div><h1 className="text-3xl font-extrabold text-white">{category.name_bn}</h1><p className="text-gray-400">{category.description_bn}</p><p className="text-xs text-gray-600 mt-2">{tools.length} টুল পাওয়া গেছে</p></div>
+        <span className="text-4xl">{activeCategory.icon}</span>
+        <div><h1 className="text-3xl font-extrabold text-white">{activeCategory.name_bn}</h1><p className="text-gray-400">{activeCategory.description_bn}</p><p className="text-xs text-gray-600 mt-2">{tools.length} টুল পাওয়া গেছে</p></div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {(tools || []).map((tool: any) => (
