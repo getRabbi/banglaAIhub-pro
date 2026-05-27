@@ -1,5 +1,6 @@
 import { createServerClient } from "@/lib/supabase";
 import { NextRequest, NextResponse } from "next/server";
+import { normalizeBlogPost } from "@/lib/schema-normalizers";
 
 export async function GET(req: NextRequest) {
   const sb = createServerClient();
@@ -8,7 +9,7 @@ export async function GET(req: NextRequest) {
   if (action === "get_post") {
     const id = req.nextUrl.searchParams.get("id");
     const { data } = await sb.from("blog_posts").select("*").eq("id", id).single();
-    return NextResponse.json(data);
+    return NextResponse.json(data ? normalizeBlogPost(data) : data);
   }
 
   if (action === "get_tool") {

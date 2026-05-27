@@ -4,14 +4,13 @@ import Image from "next/image";
 import { Metadata } from "next";
 import { unstable_noStore as noStore } from "next/cache";
 import { formatBanglaDateShort } from "@/lib/constants";
-import { normalizeBlogPosts } from "@/lib/schema-normalizers";
+import { fetchPublishedBlogPosts } from "@/lib/blog-data";
 export const metadata: Metadata = { title: "অনলাইনে আয় করুন" };
 export const dynamic = "force-dynamic";
 export const revalidate = 1800;
 export default async function MakeMoneyPage() {
   noStore();
-  const { data } = await createServerClient().from("blog_posts").select("id, title, slug, excerpt_bn, source_platform, category_id, tags, reading_time_minutes, view_count, thumbnail_url, thumbnail_alt, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").order("published_at", { ascending: false }).limit(50);
-  const posts = normalizeBlogPosts(data).filter((post) => post.category === "money-making").slice(0, 20);
+  const posts = (await fetchPublishedBlogPosts(createServerClient(), { orderBy: "published_at", limit: 50 })).filter((post) => post.category === "money-making").slice(0, 20);
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
       <div className="glass-card glow-orange p-6 sm:p-8 mb-10 relative overflow-hidden">

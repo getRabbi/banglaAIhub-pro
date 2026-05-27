@@ -1,7 +1,8 @@
 import { createServerClient } from "@/lib/supabase";
+import { fetchBlogPosts } from "@/lib/blog-data";
 export const revalidate = 300;
 export default async function AdminCalendar() {
-  const { data: posts } = await createServerClient().from("blog_posts").select("id, bangla_title, blog_slug, status, category, published_at, scheduled_at").order("published_at", { ascending: false }).limit(60);
+  const posts = await fetchBlogPosts(createServerClient(), { orderBy: "published_at", limit: 60 });
   const byDate: Record<string, any[]> = {};
   (posts || []).forEach((p: any) => { const d = (p.published_at || p.scheduled_at || p.created_at)?.split("T")[0]; if (d) { if (!byDate[d]) byDate[d] = []; byDate[d].push(p); } });
   const dates = Object.keys(byDate).sort().reverse();

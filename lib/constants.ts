@@ -147,6 +147,27 @@ export function mdToHtml(md: string): string {
       continue;
     }
 
+    if (line.startsWith("```")) {
+      flushParagraph();
+      flushList();
+      const codeLines: string[] = [];
+      i += 1;
+      while (i < lines.length && !lines[i].trim().startsWith("```")) {
+        codeLines.push(lines[i]);
+        i += 1;
+      }
+      html.push(`<pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`);
+      continue;
+    }
+
+    const image = line.match(/^!\[([^\]]*)\]\((https?:\/\/[^)\s]+|\/[^)\s]*)\)$/);
+    if (image) {
+      flushParagraph();
+      flushList();
+      html.push(`<figure><img src="${escapeAttr(image[2])}" alt="${escapeAttr(image[1] || "")}" loading="lazy" /></figure>`);
+      continue;
+    }
+
     const heading = line.match(/^(#{1,3})\s+(.+)$/);
     if (heading) {
       flushParagraph();

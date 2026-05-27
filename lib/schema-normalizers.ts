@@ -7,36 +7,65 @@ function firstLegacyCategory(tags: unknown): BlogCategory | null {
   return (tags.find((tag) => BLOG_CATEGORY_KEYS.includes(tag as BlogCategory)) as BlogCategory | undefined) || null;
 }
 
+function estimateNormalizedReadTime(text: string): number {
+  const words = (text || "").trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / 180));
+}
+
 function deriveBlogCategory(row: any): BlogCategory {
   const tagged = firstLegacyCategory(row?.tags);
-  if (tagged) return tagged;
 
   const slug = row?.category || row?.categories?.slug || "";
   if (slug === "ai-business") return "money-making";
   if (slug === "ai-productivity") return "product-review";
   if (typeof slug === "string" && slug.startsWith("ai-")) return "ai-tools";
+
+  const haystack = [
+    row?.title,
+    row?.title_bn,
+    row?.bangla_title,
+    row?.source_title,
+    row?.excerpt_bn,
+    row?.hook_bn,
+    row?.bangla_hook,
+    row?.meta_description,
+    row?.source_platform,
+    ...(Array.isArray(row?.tags) ? row.tags : []),
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  if (/(income|freelanc|earn|monetiz|side hustle|আয়|আয়|ফ্রিল্যান্স|ইনকাম)/i.test(haystack)) return "money-making";
+  if (/(review|vs|alternative|pricing|product|রিভিউ|তুলনা|দাম)/i.test(haystack)) return "product-review";
+  if (/(chatgpt|llm|agent|automation|workflow|prompt|prompts|open[- ]source|self[- ]hosted|github|huggingface|transformers|ollama|dify|autogpt|langchain|n8n|zapier|free ai|ai tools|ওপেন-সোর্স|এআই টুল|টুল)/i.test(haystack)) {
+    return "ai-tools";
+  }
+
+  if (tagged) return tagged;
   if (BLOG_CATEGORY_KEYS.includes(slug as BlogCategory)) return slug as BlogCategory;
   return "tech-news";
 }
 
 export function normalizeBlogPost(row: any) {
   const slug = row?.blog_slug || row?.slug || "";
-  const title = row?.bangla_title || row?.title || row?.source_title || "Untitled";
-  const excerpt = row?.bangla_hook || row?.excerpt_bn || row?.meta_description || "";
+  const title = row?.bangla_title || row?.title_bn || row?.title || row?.source_title || "Untitled";
+  const body = row?.bangla_body || row?.body_bn || row?.content_bn || row?.body || row?.content || "";
+  const excerpt = row?.bangla_hook || row?.hook_bn || row?.excerpt_bn || row?.summary_bn || row?.meta_description || "";
   const publishedAt = row?.published_at || row?.created_at || new Date(0).toISOString();
 
   return {
     ...row,
     bangla_title: title,
-    bangla_body: row?.bangla_body || row?.content_bn || "",
+    bangla_body: body,
     bangla_hook: excerpt,
     blog_slug: slug,
     blog_url: row?.blog_url || `/blog/${slug}`,
     meta_description: row?.meta_description || excerpt,
     category: deriveBlogCategory(row),
+    status: row?.status || (row?.is_published ? "published" : "draft"),
     tags: Array.isArray(row?.tags) ? row.tags : [],
     source: row?.source || row?.source_platform || "manual",
-    read_time_min: row?.read_time_min || row?.reading_time_minutes || 1,
+    read_time_min: row?.read_time_min || row?.reading_time_minutes || row?.read_time || estimateNormalizedReadTime(body || excerpt || title),
     view_count: row?.view_count || 0,
     published_at: publishedAt,
     thumbnail_url: row?.thumbnail_url || undefined,

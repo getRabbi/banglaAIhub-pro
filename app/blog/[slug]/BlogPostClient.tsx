@@ -22,14 +22,22 @@ export default function BlogPostClient({ post, relatedPosts, trendingPosts }: { 
   useEffect(() => { if (tracked.current) return; tracked.current = true; fetch(`/api/views/${post.blog_slug}`, { method: "POST" }).catch(() => {}); }, [post.blog_slug]);
 
   useEffect(() => {
-    const h = () => { if (!articleRef.current) return; const r = articleRef.current.getBoundingClientRect(); const t = articleRef.current.scrollHeight - window.innerHeight; const s = Math.max(0, -r.top); setProgress(Math.min(100, (s / t) * 100)); setShowBar(window.scrollY > 300); };
+    const h = () => {
+      if (!articleRef.current) return;
+      const r = articleRef.current.getBoundingClientRect();
+      const total = Math.max(1, articleRef.current.scrollHeight - window.innerHeight);
+      const scrolled = Math.max(0, -r.top);
+      setProgress(Math.min(100, (scrolled / total) * 100));
+      setShowBar(window.scrollY > 300);
+    };
     window.addEventListener("scroll", h, { passive: true }); return () => window.removeEventListener("scroll", h);
   }, []);
 
   const cat = CATEGORY_MAP[post.category as keyof typeof CATEGORY_MAP] || CATEGORY_MAP["tech-news"];
   const base = typeof window !== "undefined" ? window.location.origin : "";
   const postUrl = `${base}/blog/${post.blog_slug}`;
-  const headings = extractMarkdownHeadings(post.bangla_body).filter((heading) => heading.level === 2).slice(0, 8);
+  const articleBody = post.bangla_body?.trim() || `## সারাংশ\n\n${post.bangla_hook || post.meta_description || "এই পোস্টের বিস্তারিত কনটেন্ট আপডেট করা হচ্ছে।"}`;
+  const headings = extractMarkdownHeadings(articleBody).filter((heading) => heading.level === 2).slice(0, 8);
 
   return (
     <div className="min-h-screen">
@@ -90,7 +98,7 @@ export default function BlogPostClient({ post, relatedPosts, trendingPosts }: { 
           </nav>
         )}
 
-        <div className="article-prose max-w-none" dangerouslySetInnerHTML={{ __html: formatMarkdown(post.bangla_body) }} />
+        <div className="article-prose max-w-none" dangerouslySetInnerHTML={{ __html: formatMarkdown(articleBody) }} />
 
         {/* Tags */}
         {post.tags?.length > 0 && (
@@ -103,9 +111,9 @@ export default function BlogPostClient({ post, relatedPosts, trendingPosts }: { 
         <div className="glass-card p-6 mt-8">
           <p className="font-semibold text-white mb-3">📢 শেয়ার করুন</p>
           <div className="flex flex-wrap gap-3">
-            <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`} target="_blank" className="btn-secondary text-sm">Facebook</a>
-            <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(post.bangla_title + " " + postUrl)}`} target="_blank" className="btn-secondary text-sm">WhatsApp</a>
-            <a href={`https://t.me/share/url?url=${encodeURIComponent(postUrl)}&text=${encodeURIComponent(post.bangla_title)}`} target="_blank" className="btn-secondary text-sm">Telegram</a>
+            <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`} target="_blank" rel="noopener noreferrer" className="btn-secondary text-sm">Facebook</a>
+            <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(post.bangla_title + " " + postUrl)}`} target="_blank" rel="noopener noreferrer" className="btn-secondary text-sm">WhatsApp</a>
+            <a href={`https://t.me/share/url?url=${encodeURIComponent(postUrl)}&text=${encodeURIComponent(post.bangla_title)}`} target="_blank" rel="noopener noreferrer" className="btn-secondary text-sm">Telegram</a>
             <button onClick={() => { navigator.clipboard.writeText(postUrl); }} className="btn-secondary text-sm">📋 কপি</button>
           </div>
         </div>
@@ -136,7 +144,7 @@ export default function BlogPostClient({ post, relatedPosts, trendingPosts }: { 
         <div className="glass-card glow-blue p-8 sm:p-12 text-center">
           <h3 className="text-2xl font-bold text-white mb-3">📬 প্রতিদিন নতুন আর্টিকেল পেতে চান?</h3>
           <p className="text-gray-400 mb-6">আমাদের Facebook পেজ ফলো করুন!</p>
-          <a href="https://facebook.com/BanglaAIHub" target="_blank" className="btn-primary inline-block">📘 ফলো করুন</a>
+          <a href="https://facebook.com/BanglaAIHub" target="_blank" rel="noopener noreferrer" className="btn-primary inline-block">📘 ফলো করুন</a>
         </div>
       </section>
     </div>

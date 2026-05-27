@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Metadata } from "next";
 import { unstable_noStore as noStore } from "next/cache";
 import { BLOG_CATEGORIES, formatBanglaDateShort } from "@/lib/constants";
-import { normalizeBlogPosts } from "@/lib/schema-normalizers";
+import { fetchPublishedBlogPosts } from "@/lib/blog-data";
 
 export const metadata: Metadata = { title: "ব্লগ" };
 export const dynamic = "force-dynamic";
@@ -13,15 +13,15 @@ export const revalidate = 1800;
 export default async function BlogPage({ searchParams }: { searchParams: { category?: string; tag?: string } }) {
   noStore();
   const sb = createServerClient();
-  let query = sb.from("blog_posts").select("id, title, slug, excerpt_bn, source_platform, category_id, tags, reading_time_minutes, view_count, thumbnail_url, thumbnail_alt, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").order("published_at", { ascending: false }).limit(60);
-  if (searchParams.tag) query = query.contains("tags", [searchParams.tag]);
-
-  const [{ data: rawPosts }, { data: rawTrending }] = await Promise.all([
-    query,
-    sb.from("blog_posts").select("id, title, slug, excerpt_bn, category_id, tags, source_platform, view_count, reading_time_minutes, thumbnail_url, thumbnail_alt, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").order("view_count", { ascending: false }).limit(5),
+  const [rawPosts, trending] = await Promise.all([
+    fetchPublishedBlogPosts(sb, { orderBy: "published_at", limit: 80 }),
+    fetchPublishedBlogPosts(sb, { orderBy: "view_count", limit: 5 }),
   ]);
-  const posts = normalizeBlogPosts(rawPosts).filter((post) => !searchParams.category || post.category === searchParams.category);
-  const trending = normalizeBlogPosts(rawTrending);
+  const posts = rawPosts.filter((post) => {
+    if (searchParams.category && post.category !== searchParams.category) return false;
+    if (searchParams.tag && !post.tags.includes(searchParams.tag)) return false;
+    return true;
+  }).slice(0, 60);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">

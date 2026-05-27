@@ -4,19 +4,24 @@ import Image from "next/image";
 import { Metadata } from "next";
 import { PRICING_LABELS } from "@/lib/constants";
 import { getCuratedTools, mergeCuratedTools } from "@/lib/curated-tools";
-import { normalizeBlogPosts, normalizeTools } from "@/lib/schema-normalizers";
+import { fetchPublishedBlogPosts } from "@/lib/blog-data";
+import { normalizeTools } from "@/lib/schema-normalizers";
 export const metadata: Metadata = { title: "সার্চ" };
 export default async function SearchPage({ searchParams }: { searchParams: { q?: string } }) {
   const q = searchParams.q?.trim() || "";
   let tools: any[] = [], posts: any[] = [];
   if (q) {
     const sb = createServerClient();
-    const [{ data: t }, { data: p }] = await Promise.all([
+    const [{ data: t }, allPosts] = await Promise.all([
       sb.from("tools").select("id,name,slug,tagline_bn,pricing_type,logo_url,status").eq("status", "published").or(`name.ilike.%${q}%,tagline_bn.ilike.%${q}%,description_bn.ilike.%${q}%`).limit(12),
-      sb.from("blog_posts").select("id,title,slug,excerpt_bn,content_bn,source_platform,tags,category_id,reading_time_minutes,view_count,published_at,created_at,categories(slug)").eq("status","published").or(`title.ilike.%${q}%,excerpt_bn.ilike.%${q}%,content_bn.ilike.%${q}%`).limit(12),
+      fetchPublishedBlogPosts(sb, { orderBy: "published_at", limit: 80 }),
     ]);
     tools = mergeCuratedTools(normalizeTools(t), getCuratedTools({ query: q })).slice(0, 12);
-    posts = normalizeBlogPosts(p);
+    const term = q.toLowerCase();
+    posts = allPosts.filter((post) => {
+      const haystack = [post.bangla_title, post.bangla_hook, post.bangla_body, post.category, ...post.tags].join(" ").toLowerCase();
+      return haystack.includes(term);
+    }).slice(0, 12);
   }
   const total = tools.length + posts.length;
   return (

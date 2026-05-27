@@ -2,16 +2,16 @@ import { createServerClient } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import BlogPostClient from "./BlogPostClient";
-import { normalizeBlogPost, normalizeBlogPosts } from "@/lib/schema-normalizers";
+import { fetchPublishedBlogPostBySlug, fetchPublishedBlogPosts } from "@/lib/blog-data";
 
 export const revalidate = 3600;
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const sb = createServerClient();
   const slug = decodeURIComponent(params.slug);
-  const { data } = await sb.from("blog_posts").select("title, slug, excerpt_bn, meta_description, thumbnail_url, og_image_url, tags, categories(slug)").eq("slug", slug).eq("status", "published").single();
-  if (!data) return { title: "পোস্ট পাওয়া যায়নি" };
-  const post = normalizeBlogPost(data);
+  const post = await fetchPublishedBlogPostBySlug(sb, slug);
+  if (!post) return { title: "পোস্ট পাওয়া যায়নি" };
+
   const base = process.env.NEXT_PUBLIC_BASE_URL || "https://banglaaihub.com";
   const image = post.og_image_url || post.thumbnail_url || `${base}/api/og/${post.blog_slug}`;
   return {
@@ -25,20 +25,26 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function BlogPost({ params }: { params: { slug: string } }) {
   const sb = createServerClient();
   const slug = decodeURIComponent(params.slug);
-  const { data: rawPost } = await sb.from("blog_posts").select("*, categories(slug, name_bn, icon)").eq("slug", slug).eq("status", "published").single();
-  if (!rawPost) notFound();
-  const post = normalizeBlogPost(rawPost);
+  const post = await fetchPublishedBlogPostBySlug(sb, slug);
+  if (!post) notFound();
 
-  const [{ data: rawRelated }, { data: rawTrending }] = await Promise.all([
-    sb.from("blog_posts").select("id, title, slug, excerpt_bn, category_id, tags, source_platform, reading_time_minutes, view_count, thumbnail_url, thumbnail_alt, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").neq("id", post.id).order("published_at", { ascending: false }).limit(12),
-    sb.from("blog_posts").select("id, title, slug, excerpt_bn, category_id, tags, source_platform, view_count, reading_time_minutes, thumbnail_url, thumbnail_alt, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").neq("id", post.id).order("view_count", { ascending: false }).limit(5),
+  const [rawRelated, trending] = await Promise.all([
+    fetchPublishedBlogPosts(sb, { orderBy: "published_at", excludeId: post.id, limit: 12 }),
+    fetchPublishedBlogPosts(sb, { orderBy: "view_count", excludeId: post.id, limit: 5 }),
   ]);
-  const related = normalizeBlogPosts(rawRelated).filter((item) => item.category === post.category).slice(0, 6);
-  const trending = normalizeBlogPosts(rawTrending);
+  const related = rawRelated.filter((item) => item.category === post.category).slice(0, 6);
 
-  // JSON-LD
   const base = process.env.NEXT_PUBLIC_BASE_URL || "https://banglaaihub.com";
-  const schema = { "@context": "https://schema.org", "@type": "Article", headline: post.bangla_title, description: post.meta_description, url: `${base}/blog/${post.blog_slug}`, image: post.og_image_url || post.thumbnail_url || `${base}/api/og/${post.blog_slug}`, datePublished: post.published_at, publisher: { "@type": "Organization", name: "BanglaAIHub" } };
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.bangla_title,
+    description: post.meta_description,
+    url: `${base}/blog/${post.blog_slug}`,
+    image: post.og_image_url || post.thumbnail_url || `${base}/api/og/${post.blog_slug}`,
+    datePublished: post.published_at,
+    publisher: { "@type": "Organization", name: "BanglaAIHub" },
+  };
 
   return (
     <>

@@ -1,16 +1,17 @@
 import { createServerClient } from "@/lib/supabase";
 import { BLOG_CATEGORIES } from "@/lib/constants";
+import { fetchPublishedBlogPosts } from "@/lib/blog-data";
 export const revalidate = 300;
 export default async function AdminAnalytics() {
   const sb = createServerClient();
-  const [{ data: blogs }, { data: tools }, { count: clicks30 }, { data: topPosts }, { data: topTools }] = await Promise.all([
-    sb.from("blog_posts").select("category, view_count, source").eq("status", "published"),
+  const [blogs, { data: tools }, { count: clicks30 }, { data: topTools }] = await Promise.all([
+    fetchPublishedBlogPosts(sb, { orderBy: "published_at", limit: 1000 }),
     sb.from("tools").select("view_count, click_count").eq("is_active", true),
     sb.from("affiliate_clicks").select("id", { count: "exact", head: true }).gte("clicked_at", new Date(Date.now() - 30 * 86400000).toISOString()),
-    sb.from("blog_posts").select("bangla_title, blog_slug, view_count, category").eq("status", "published").order("view_count", { ascending: false }).limit(10),
     sb.from("tools").select("name, slug, view_count, click_count").eq("is_active", true).order("click_count", { ascending: false }).limit(10),
   ]);
   const bp = blogs || []; const tl = tools || [];
+  const topPosts = [...bp].sort((a: any, b: any) => (b.view_count || 0) - (a.view_count || 0)).slice(0, 10);
   const totalViews = bp.reduce((s, p: any) => s + (p.view_count || 0), 0);
   const toolViews = tl.reduce((s, t: any) => s + (t.view_count || 0), 0);
   const toolClicks = tl.reduce((s, t: any) => s + (t.click_count || 0), 0);

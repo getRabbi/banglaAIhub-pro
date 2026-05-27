@@ -1,22 +1,21 @@
 import { createServerClient } from "@/lib/supabase";
 import Link from "next/link";
+import { fetchPublishedBlogPosts } from "@/lib/blog-data";
 
 export const revalidate = 300; // 5 min
 
 export default async function AdminDashboard() {
   const sb = createServerClient();
-  const [{ count: totalPosts }, { count: totalTools }, { count: totalSubs }, { data: recentPosts }, { data: recentJobs }, { count: pendingQueue }] = await Promise.all([
-    sb.from("blog_posts").select("*", { count: "exact", head: true }).eq("status", "published"),
+  const [publishedPosts, { count: totalTools }, { count: totalSubs }, { data: recentJobs }, { count: pendingQueue }] = await Promise.all([
+    fetchPublishedBlogPosts(sb, { orderBy: "published_at", limit: 1000 }),
     sb.from("tools").select("*", { count: "exact", head: true }).eq("is_active", true),
     sb.from("newsletter_subscribers").select("*", { count: "exact", head: true }).eq("is_active", true),
-    sb.from("blog_posts").select("id, bangla_title, blog_slug, category, view_count, fb_posted, published_at").eq("status", "published").order("published_at", { ascending: false }).limit(5),
     sb.from("openclaw_jobs").select("id, status, stats, started_at, completed_at").order("started_at", { ascending: false }).limit(5),
     sb.from("scrape_queue").select("id", { count: "exact", head: true }).eq("status", "pending"),
   ]);
-
-  // Aggregate views
-  const { data: viewData } = await sb.from("blog_posts").select("view_count").eq("status", "published");
-  const totalViews = (viewData || []).reduce((s: number, p: any) => s + (p.view_count || 0), 0);
+  const totalPosts = publishedPosts.length;
+  const recentPosts = publishedPosts.slice(0, 5);
+  const totalViews = publishedPosts.reduce((s: number, p: any) => s + (p.view_count || 0), 0);
 
   // Tracked clicks last 30d
   const { count: affClicks } = await sb.from("affiliate_clicks").select("*", { count: "exact", head: true }).gte("clicked_at", new Date(Date.now() - 30 * 86400000).toISOString());

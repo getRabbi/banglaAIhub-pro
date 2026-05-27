@@ -5,7 +5,8 @@ import { unstable_noStore as noStore } from "next/cache";
 import { PRICING_LABELS, BADGE_LABELS, formatBanglaDateShort } from "@/lib/constants";
 import { getCuratedTools, mergeCuratedTools } from "@/lib/curated-tools";
 import { mergeCuratedDeals } from "@/lib/curated-deals";
-import { normalizeBlogPosts, normalizeTools } from "@/lib/schema-normalizers";
+import { fetchPublishedBlogPosts } from "@/lib/blog-data";
+import { normalizeTools } from "@/lib/schema-normalizers";
 
 export const revalidate = 1800;
 export const dynamic = "force-dynamic";
@@ -21,14 +22,14 @@ export default async function HomePage() {
   noStore();
   const sb = createServerClient();
 
-  const [{ data: rawFeaturedTools }, { data: rawRecentBlog }, { data: categories }, { data: deals }] = await Promise.all([
+  const [{ data: rawFeaturedTools }, rawRecentBlog, { data: categories }, { data: deals }] = await Promise.all([
     sb.from("tools").select("*, categories(name_bn, slug)").eq("status", "published").order("view_count", { ascending: false }).limit(8),
-    sb.from("blog_posts").select("id, title, slug, excerpt_bn, source_platform, category_id, tags, reading_time_minutes, view_count, thumbnail_url, thumbnail_alt, published_at, created_at, categories(slug, name_bn, icon)").eq("status", "published").order("published_at", { ascending: false }).limit(6),
+    fetchPublishedBlogPosts(sb, { orderBy: "published_at", limit: 6 }),
     sb.from("categories").select("*").order("sort_order").limit(12),
     sb.from("deals").select("*, tools(name, logo_url)").eq("is_active", true).order("created_at", { ascending: false }).limit(4),
   ]);
   const featuredTools = mergeCuratedTools(normalizeTools(rawFeaturedTools), getCuratedTools()).slice(0, 8);
-  const recentBlog = normalizeBlogPosts(rawRecentBlog);
+  const recentBlog = rawRecentBlog;
   const activeDeals = mergeCuratedDeals(deals).slice(0, 4);
 
   return (

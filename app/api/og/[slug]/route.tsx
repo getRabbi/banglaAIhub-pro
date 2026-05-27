@@ -1,14 +1,13 @@
 import { ImageResponse } from "next/og";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest } from "next/server";
-import { normalizeBlogPost } from "@/lib/schema-normalizers";
+import { fetchPublishedBlogPostBySlug } from "@/lib/blog-data";
 export const runtime = "edge";
 const COLORS: Record<string, { bg: string; ac: string }> = { "money-making": { bg: "#064e3b", ac: "#10b981" }, "ai-tools": { bg: "#2e1065", ac: "#8b5cf6" }, "tech-news": { bg: "#1e3a5f", ac: "#3b82f6" }, "product-review": { bg: "#451a03", ac: "#f59e0b" } };
 export async function GET(_req: NextRequest, { params }: { params: { slug: string } }) {
   const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
   const slug = decodeURIComponent(params.slug);
-  const { data } = await sb.from("blog_posts").select("title,slug,tags,reading_time_minutes,categories(slug)").eq("slug", slug).single();
-  const post = data ? normalizeBlogPost(data) : null;
+  const post = await fetchPublishedBlogPostBySlug(sb, slug);
   // Also try tools
   const { data: tool } = !post ? await sb.from("tools").select("name, tagline_bn").eq("slug", slug).single() : { data: null };
   const title = post?.bangla_title || tool?.name || "BanglaAIHub";

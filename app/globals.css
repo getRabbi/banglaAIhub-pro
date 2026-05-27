@@ -205,6 +205,10 @@
   .article-prose a { color:#67e8f9; text-decoration:none; border-bottom:1px solid rgba(103,232,249,0.35); }
   .article-prose a:hover { color:#a7f3d0; border-bottom-color:#a7f3d0; }
   .article-prose code { color:#bae6fd; background:rgba(14,165,233,0.12); border:1px solid rgba(14,165,233,0.18); border-radius:0.35rem; padding:0.1rem 0.35rem; font-size:0.92em; }
+  .article-prose pre { margin-top:1.35rem; overflow-x:auto; border:1px solid var(--border); border-radius:0.5rem; background:#0b0f17; padding:1rem; }
+  .article-prose pre code { display:block; padding:0; border:0; background:transparent; color:#dbeafe; font-size:0.92rem; line-height:1.7; white-space:pre; }
+  .article-prose figure { margin-top:1.5rem; overflow:hidden; border:1px solid var(--border); border-radius:0.5rem; background:rgba(255,255,255,0.03); }
+  .article-prose figure img { display:block; width:100%; height:auto; }
   .article-prose ul,
   .article-prose ol { margin-top:1.1rem; padding-left:1.35rem; display:grid; gap:0.65rem; }
   .article-prose ul { list-style:disc; }

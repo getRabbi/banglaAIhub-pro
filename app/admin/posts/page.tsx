@@ -1,15 +1,13 @@
 import { createServerClient } from "@/lib/supabase";
 import Link from "next/link";
 import { BLOG_CATEGORIES } from "@/lib/constants";
+import { fetchBlogPosts } from "@/lib/blog-data";
 
 export const revalidate = 60;
 
 export default async function AdminPosts({ searchParams }: { searchParams: { status?: string } }) {
   const sb = createServerClient();
-  let query = sb.from("blog_posts").select("id, bangla_title, blog_slug, category, status, source, view_count, fb_posted, quality_score, quality_grade, published_at, created_at").order("created_at", { ascending: false }).limit(50);
-  if (searchParams.status) query = query.eq("status", searchParams.status);
-
-  const { data: posts } = await query;
+  const posts = await fetchBlogPosts(sb, { orderBy: "created_at", limit: 50, status: searchParams.status });
 
   const STATUS_STYLES: Record<string, string> = {
     published: "bg-green-500/20 text-green-400",
@@ -46,13 +44,14 @@ export default async function AdminPosts({ searchParams }: { searchParams: { sta
             </tr>
           </thead>
           <tbody>
-            {(posts || []).map((p: any) => {
+            {posts.map((p: any) => {
               const cat = BLOG_CATEGORIES[p.category as keyof typeof BLOG_CATEGORIES];
+              const createdAt = p.created_at || p.published_at;
               return (
                 <tr key={p.id} className="border-b border-brand-border/50 hover:bg-white/[0.02]">
                   <td className="px-4 py-3">
                     <Link href={`/admin/posts/${p.id}`} className="text-gray-200 hover:text-white font-medium line-clamp-1">{p.bangla_title}</Link>
-                    <p className="text-xs text-gray-600 mt-0.5">{new Date(p.created_at).toLocaleDateString("bn-BD")}</p>
+                    <p className="text-xs text-gray-600 mt-0.5">{createdAt ? new Date(createdAt).toLocaleDateString("bn-BD") : "-"}</p>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell"><span className="text-xs text-gray-500">{cat?.emoji} {cat?.label}</span></td>
                   <td className="px-4 py-3 hidden md:table-cell"><span className="text-xs text-gray-600">{p.source}</span></td>
@@ -71,7 +70,7 @@ export default async function AdminPosts({ searchParams }: { searchParams: { sta
             })}
           </tbody>
         </table>
-        {(!posts || posts.length === 0) && <p className="text-center text-gray-600 py-10">কোনো পোস্ট নেই</p>}
+        {posts.length === 0 && <p className="text-center text-gray-600 py-10">কোনো পোস্ট নেই</p>}
       </div>
     </div>
   );
