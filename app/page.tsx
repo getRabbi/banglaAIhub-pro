@@ -18,19 +18,52 @@ const BLOG_CAT_BADGE: Record<string, { emoji: string; label: string; cls: string
   "product-review": { emoji: "🚀", label: "প্রোডাক্ট রিভিউ", cls: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
 };
 
+const PROMPT_FALLBACKS = [
+  { title: "কনটেন্ট আইডিয়া জেনারেটর", description: "নিশ, অডিয়েন্স ও লক্ষ্য দিলে ৩০ দিনের পোস্ট আইডিয়া, হুক এবং CTA বানানোর প্রম্পট।", href: "/prompts", meta: "Content · ChatGPT" },
+  { title: "ক্লায়েন্ট প্রপোজাল প্রম্পট", description: "ফ্রিল্যান্স কাজের জন্য প্রফেশনাল প্রপোজাল, স্কোপ, টাইমলাইন ও প্রাইসিং লিখুন।", href: "/prompts", meta: "Freelance · সব AI" },
+  { title: "SEO ব্লগ আউটলাইন প্রম্পট", description: "কিওয়ার্ড থেকে হেডিং, FAQ, সার্চ ইনটেন্ট ও বাংলা ব্লগ স্ট্রাকচার তৈরি করুন।", href: "/prompts", meta: "SEO · বাংলা" },
+];
+
+const GUIDE_FALLBACKS = [
+  { title: "AI টুল বাছাই করার চেকলিস্ট", description: "দাম, ডেটা প্রাইভেসি, আউটপুট কোয়ালিটি ও ব্যবহার সহজ কিনা দ্রুত যাচাই করুন।", href: "/guides", meta: "৮ মিনিট" },
+  { title: "বাংলা কনটেন্ট ওয়ার্কফ্লো", description: "রিসার্চ, ড্রাফট, এডিট, ইমেজ ও পাবলিশিং পর্যন্ত একটি practical AI workflow।", href: "/guides", meta: "১০ মিনিট" },
+  { title: "Automation শুরু করার গাইড", description: "নো-কোড টুল দিয়ে lead capture, report, email এবং social posting automate করুন।", href: "/guides", meta: "১২ মিনিট" },
+];
+
+const EARN_FALLBACKS = [
+  { title: "AI দিয়ে সার্ভিস প্যাকেজ বানান", description: "রাইটিং, ডিজাইন, automation বা research service কীভাবে offer করবেন তার কাঠামো।", href: "/make-money", meta: "প্রথম আয়" },
+  { title: "ফ্রিল্যান্সারদের জন্য AI workflow", description: "কাজ দ্রুত শেষ করা, quality ধরে রাখা এবং client delivery polish করার practical guide।", href: "/make-money", meta: "Freelance" },
+  { title: "কনটেন্ট থেকে ইনকাম", description: "ব্লগ, Facebook, YouTube Shorts ও newsletter দিয়ে audience build করার roadmap।", href: "/make-money", meta: "Content" },
+];
+
 export default async function HomePage() {
   noStore();
   const sb = createServerClient();
 
-  const [{ data: rawFeaturedTools }, rawRecentBlog, { data: categories }, { data: deals }] = await Promise.all([
+  const [{ data: rawFeaturedTools }, rawRecentBlog, { data: categories }, { data: deals }, { data: rawPrompts }, { data: rawGuides }] = await Promise.all([
     sb.from("tools").select("*, categories(name_bn, slug)").eq("status", "published").order("view_count", { ascending: false }).limit(8),
-    fetchPublishedBlogPosts(sb, { orderBy: "published_at", limit: 6 }),
+    fetchPublishedBlogPosts(sb, { orderBy: "published_at", limit: 20 }),
     sb.from("categories").select("*").order("sort_order").limit(12),
     sb.from("deals").select("*, tools(name, logo_url)").eq("is_active", true).order("created_at", { ascending: false }).limit(4),
+    sb.from("prompts").select("id, slug, title_bn, description_bn, tool_name, category, view_count").eq("is_active", true).order("view_count", { ascending: false }).limit(3),
+    sb.from("guides").select("id, slug, title_bn, description_bn, read_time_min, published_at").eq("is_active", true).order("published_at", { ascending: false }).limit(3),
   ]);
   const featuredTools = mergeCuratedTools(normalizeTools(rawFeaturedTools), getCuratedTools()).slice(0, 8);
-  const recentBlog = rawRecentBlog;
+  const recentBlog = rawRecentBlog.slice(0, 6);
   const activeDeals = mergeCuratedDeals(deals).slice(0, 4);
+  const promptCards = (rawPrompts && rawPrompts.length > 0)
+    ? rawPrompts.map((item: any) => ({ title: item.title_bn, description: item.description_bn, href: `/prompts/${item.slug}`, meta: `${item.tool_name || "সব AI"} · ${item.category || "Prompt"}` }))
+    : PROMPT_FALLBACKS;
+  const guideCards = (rawGuides && rawGuides.length > 0)
+    ? rawGuides.map((item: any) => ({ title: item.title_bn, description: item.description_bn, href: `/guides/${item.slug}`, meta: `${item.read_time_min || 5} মিনিট` }))
+    : GUIDE_FALLBACKS;
+  const earnCards = rawRecentBlog.filter((post: any) => post.category === "money-making").slice(0, 3).map((post: any) => ({
+    title: post.bangla_title,
+    description: post.bangla_hook,
+    href: `/blog/${post.blog_slug}`,
+    meta: `${post.read_time_min} মিনিট`,
+  }));
+  const moneyCards = earnCards.length > 0 ? earnCards : EARN_FALLBACKS;
 
   return (
     <div className="min-h-screen">
@@ -112,6 +145,78 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* ═══ PROMPTS ═══ */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 border-t border-brand-border">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-8">
+          <div>
+            <h2 className="section-title">💡 প্রম্পট লাইব্রেরি</h2>
+            <p className="text-sm text-gray-500 mt-2">কাজ অনুযায়ী রেডিমেড prompt, copy করে AI tool-এ ব্যবহার করুন।</p>
+          </div>
+          <Link href="/prompts" className="text-sm text-brand-electric hover:underline">সব প্রম্পট দেখুন →</Link>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {promptCards.map((item: any) => (
+            <Link key={`${item.href}-${item.title}`} href={item.href} className="glass-card card-hover p-5 group min-h-[190px] flex flex-col">
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <span className="text-xs px-2.5 py-1 rounded-full border border-violet-500/20 bg-violet-500/10 text-violet-300">Prompt</span>
+                <span className="text-xs text-gray-600 truncate">{item.meta}</span>
+              </div>
+              <h3 className="font-bold text-white group-hover:text-violet-300 transition-colors mb-2 leading-snug">{item.title}</h3>
+              <p className="text-sm text-gray-500 line-clamp-3 mb-4">{item.description}</p>
+              <span className="mt-auto text-sm text-brand-electric">ব্যবহার করুন →</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ═══ GUIDES ═══ */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 border-t border-brand-border">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-8">
+          <div>
+            <h2 className="section-title">📚 স্টেপ-বাই-স্টেপ গাইড</h2>
+            <p className="text-sm text-gray-500 mt-2">AI tools setup, workflow, comparison এবং practical ব্যবহার এক জায়গায়।</p>
+          </div>
+          <Link href="/guides" className="text-sm text-brand-electric hover:underline">সব গাইড দেখুন →</Link>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {guideCards.map((item: any) => (
+            <Link key={`${item.href}-${item.title}`} href={item.href} className="glass-card card-hover p-5 group min-h-[190px] flex flex-col">
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <span className="text-xs px-2.5 py-1 rounded-full border border-cyan-500/20 bg-cyan-500/10 text-cyan-300">Guide</span>
+                <span className="text-xs text-gray-600">⏱ {item.meta}</span>
+              </div>
+              <h3 className="font-bold text-white group-hover:text-cyan-300 transition-colors mb-2 leading-snug">{item.title}</h3>
+              <p className="text-sm text-gray-500 line-clamp-3 mb-4">{item.description}</p>
+              <span className="mt-auto text-sm text-brand-electric">পড়ুন →</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ═══ MAKE MONEY RESOURCES ═══ */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 border-t border-brand-border">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-8">
+          <div>
+            <h2 className="section-title">💰 AI দিয়ে আয় করুন</h2>
+            <p className="text-sm text-gray-500 mt-2">Freelancing, content, automation service এবং ছোট business workflow থেকে আয়ের roadmap।</p>
+          </div>
+          <Link href="/make-money" className="text-sm text-brand-electric hover:underline">আয়ের গাইড দেখুন →</Link>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {moneyCards.map((item: any) => (
+            <Link key={`${item.href}-${item.title}`} href={item.href} className="glass-card card-hover p-5 group min-h-[190px] flex flex-col glow-orange">
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <span className="text-xs px-2.5 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-300">Income</span>
+                <span className="text-xs text-gray-600">{item.meta}</span>
+              </div>
+              <h3 className="font-bold text-white group-hover:text-emerald-300 transition-colors mb-2 leading-snug">{item.title}</h3>
+              <p className="text-sm text-gray-500 line-clamp-3 mb-4">{item.description}</p>
+              <span className="mt-auto text-sm text-brand-electric">শুরু করুন →</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       {/* ═══ LATEST BLOG ═══ */}
       {recentBlog && recentBlog.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 border-t border-brand-border">
@@ -147,18 +252,6 @@ export default async function HomePage() {
           </div>
         </section>
       )}
-
-      {/* ═══ MAKE MONEY CTA ═══ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 border-t border-brand-border">
-        <div className="glass-card glow-orange p-8 sm:p-12 relative overflow-hidden">
-          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-orange via-brand-green to-brand-cyan" />
-          <div className="relative z-10 max-w-2xl">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">💰 AI দিয়ে অনলাইনে আয় করুন</h2>
-            <p className="text-gray-400 mb-6 leading-8">AI টুলস ব্যবহার করে ফ্রিল্যান্সিং, কনটেন্ট তৈরি, এবং প্যাসিভ ইনকাম — সব practical গাইড বাংলায়।</p>
-            <Link href="/make-money" className="btn-primary inline-block">আয়ের গাইড দেখুন →</Link>
-          </div>
-        </div>
-      </section>
 
       {/* ═══ DEALS ═══ */}
       {activeDeals.length > 0 && (
