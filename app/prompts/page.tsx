@@ -16,7 +16,7 @@ export default async function PromptsPage() {
   const prompts = items && items.length > 0 ? items : CURATED_PROMPTS;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+    <div className="mx-auto max-w-7xl px-3 py-8 sm:px-6 sm:py-10">
       <h1 className="text-3xl font-extrabold text-white mb-2">💡 প্রম্পট লাইব্রেরি</h1>
       <p className="text-gray-400 mb-8">AI টুলসের জন্য রেডিমেড প্রম্পট — কপি করে ব্যবহার করুন</p>
       {(!items || items.length === 0) && (
@@ -27,7 +27,7 @@ export default async function PromptsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {prompts.map((p: any) => (
           <Link key={p.id || p.slug} href={`/prompts/${p.slug}`} className="glass-card card-hover p-5 group min-h-[190px] flex flex-col">
-            <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <span className="text-xs px-2.5 py-1 rounded-full bg-violet-500/10 text-violet-300 border border-violet-500/20">{p.category || "prompt"}</span>
               <span className="text-xs text-gray-600 truncate">{p.tool_name || "সব AI"}</span>
             </div>

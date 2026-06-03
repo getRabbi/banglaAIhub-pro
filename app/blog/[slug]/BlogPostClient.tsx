@@ -10,7 +10,7 @@ const CATEGORY_MAP: Record<string, { label: string; emoji: string; color: string
   "product-review": { label: "প্রোডাক্ট রিভিউ", emoji: "🚀", color: "amber", textClass: "text-amber-400", badgeClass: "bg-amber-500/10 border-amber-500/20 text-amber-400" },
 };
 
-interface Post { id: number; bangla_title: string; bangla_body: string; bangla_hook: string; blog_slug: string; blog_url: string; meta_description: string; category: string; tags: string[]; source: string; read_time_min: number; view_count: number; published_at: string; thumbnail_url?: string; thumbnail_alt?: string; }
+interface Post { id: number; bangla_title: string; bangla_body: string; bangla_hook: string; blog_slug: string; blog_url: string; meta_description: string; category: string; tags: string[]; source: string; read_time_min: number; view_count: number; published_at: string; updated_at?: string; thumbnail_url?: string; thumbnail_alt?: string; }
 type PostSummary = Pick<Post, "id" | "bangla_title" | "bangla_hook" | "blog_slug" | "category" | "read_time_min" | "view_count" | "published_at" | "thumbnail_url" | "thumbnail_alt">;
 
 export default function BlogPostClient({ post, relatedPosts, trendingPosts }: { post: Post; relatedPosts: PostSummary[]; trendingPosts: PostSummary[] }) {
@@ -47,23 +47,23 @@ export default function BlogPostClient({ post, relatedPosts, trendingPosts }: { 
       {/* Floating title */}
       {showBar && (
         <div className="fixed top-1 left-0 right-0 z-40 px-4 py-2 bg-brand-navy/90 backdrop-blur-lg border-b border-brand-border">
-          <div className="max-w-4xl mx-auto flex items-center justify-between"><p className="text-sm text-gray-400 truncate max-w-[70%]">{post.bangla_title}</p><span className="text-xs text-gray-600">{Math.round(progress)}%</span></div>
+          <div className="mx-auto flex max-w-4xl items-center justify-between gap-3"><p className="truncate text-sm text-gray-400">{post.bangla_title}</p><span className="shrink-0 text-xs text-gray-600">{Math.round(progress)}%</span></div>
         </div>
       )}
 
-      <article ref={articleRef} className="max-w-4xl mx-auto px-4 sm:px-6 pt-12 pb-8">
+      <article ref={articleRef} className="page-shell max-w-4xl pt-8 pb-8 sm:pt-12">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-8">
+        <nav className="mb-7 flex items-center gap-2 overflow-x-auto whitespace-nowrap text-sm text-gray-500 scrollbar-hide">
           <Link href="/" className="hover:text-gray-300">হোম</Link><span>/</span>
           <Link href="/blog" className="hover:text-gray-300">ব্লগ</Link><span>/</span>
           <Link href={`/blog?category=${post.category}`} className={cat.textClass}>{cat.label}</Link>
         </nav>
 
-        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm mb-6 ${cat.badgeClass}`}>{cat.emoji} {cat.label}</div>
+        <div className={`inline-flex max-w-full items-center gap-2 rounded-full border px-3 py-1.5 text-sm mb-6 ${cat.badgeClass}`}>{cat.emoji} {cat.label}</div>
 
-        <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold leading-tight text-white mb-6">{post.bangla_title}</h1>
+        <h1 className="mb-6 text-2xl font-extrabold leading-tight text-white sm:text-4xl md:text-5xl">{post.bangla_title}</h1>
 
-        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400 mb-10 pb-8 border-b border-brand-border">
+        <div className="mb-8 flex flex-wrap items-center gap-3 border-b border-brand-border pb-7 text-sm text-gray-400 sm:gap-4">
           <time dateTime={post.published_at}>📅 {formatBanglaDate(post.published_at)}</time>
           <span>⏱ {post.read_time_min} মিনিট</span>
           <span>👁 {post.view_count} বার পড়া</span>
@@ -79,18 +79,18 @@ export default function BlogPostClient({ post, relatedPosts, trendingPosts }: { 
         )}
 
         {post.bangla_hook && (
-          <div className="mb-8 rounded-lg border border-brand-blue/25 bg-brand-blue/10 p-5">
+          <div className="mb-8 rounded-lg border border-brand-blue/25 bg-brand-blue/10 p-5 sm:p-6">
             <p className="text-xs font-semibold uppercase tracking-wider text-brand-electric mb-2">দ্রুত সারাংশ</p>
-            <p className="text-gray-200 leading-8">{post.bangla_hook}</p>
+            <p className="text-gray-200 leading-8 sm:text-lg">{post.bangla_hook}</p>
           </div>
         )}
 
         {headings.length >= 3 && (
-          <nav className="mb-10 rounded-lg border border-brand-border bg-white/[0.03] p-5" aria-label="Article sections">
+          <nav className="mb-10 rounded-lg border border-brand-border bg-white/[0.03] p-5 sm:p-6" aria-label="Article sections">
             <p className="text-sm font-semibold text-white mb-3">এই লেখায় যা আছে</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {headings.map((heading) => (
-                <a key={heading.id} href={`#${heading.id}`} className="text-sm text-gray-400 hover:text-brand-electric transition-colors">
+                <a key={heading.id} href={`#${heading.id}`} className="rounded-md px-2 py-1.5 text-sm text-gray-400 transition-colors hover:bg-white/[0.04] hover:text-brand-electric">
                   {heading.text}
                 </a>
               ))}
@@ -108,7 +108,7 @@ export default function BlogPostClient({ post, relatedPosts, trendingPosts }: { 
         )}
 
         {/* Share */}
-        <div className="glass-card p-6 mt-8">
+        <div className="glass-card p-5 mt-8 sm:p-6">
           <p className="font-semibold text-white mb-3">📢 শেয়ার করুন</p>
           <div className="flex flex-wrap gap-3">
             <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`} target="_blank" rel="noopener noreferrer" className="btn-secondary text-sm">Facebook</a>
@@ -121,8 +121,8 @@ export default function BlogPostClient({ post, relatedPosts, trendingPosts }: { 
 
       {/* Related */}
       {relatedPosts.length > 0 && (
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 border-t border-brand-border">
-          <h2 className="text-2xl font-bold text-white mb-8">{cat.emoji} আরো {cat.label} আর্টিকেল</h2>
+        <section className="page-shell max-w-6xl section-band">
+          <h2 className="section-title mb-8">{cat.emoji} আরো {cat.label} আর্টিকেল</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {relatedPosts.map((rp) => <PostCard key={rp.id} post={rp} />)}
           </div>
@@ -131,8 +131,8 @@ export default function BlogPostClient({ post, relatedPosts, trendingPosts }: { 
 
       {/* Trending */}
       {trendingPosts.length > 0 && (
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 border-t border-brand-border">
-          <h2 className="text-2xl font-bold text-white mb-8">🔥 সবচেয়ে জনপ্রিয়</h2>
+        <section className="page-shell max-w-6xl section-band">
+          <h2 className="section-title mb-8">🔥 সবচেয়ে জনপ্রিয়</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {trendingPosts.map((tp) => <PostCard key={tp.id} post={tp} />)}
           </div>
@@ -140,8 +140,8 @@ export default function BlogPostClient({ post, relatedPosts, trendingPosts }: { 
       )}
 
       {/* CTA */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 py-16">
-        <div className="glass-card glow-blue p-8 sm:p-12 text-center">
+      <section className="page-shell max-w-4xl py-12 sm:py-16">
+        <div className="glass-card glow-blue p-5 text-center sm:p-12">
           <h3 className="text-2xl font-bold text-white mb-3">📬 প্রতিদিন নতুন আর্টিকেল পেতে চান?</h3>
           <p className="text-gray-400 mb-6">আমাদের Facebook পেজ ফলো করুন!</p>
           <a href="https://facebook.com/BanglaAIHub" target="_blank" rel="noopener noreferrer" className="btn-primary inline-block">📘 ফলো করুন</a>
@@ -161,13 +161,13 @@ function PostCard({ post }: { post: PostSummary }) {
         </div>
       )}
       <div className="p-5">
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex flex-wrap items-center gap-2 mb-3">
           <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gray-400 border border-brand-border">{cat.emoji} {cat.label}</span>
           <span className="text-xs text-gray-600">{formatBanglaDateShort(post.published_at)}</span>
         </div>
         <h3 className="font-semibold text-white group-hover:text-brand-electric transition-colors line-clamp-2 mb-2">{post.bangla_title}</h3>
         <p className="text-sm text-gray-500 line-clamp-2 mb-3">{post.bangla_hook}</p>
-        <div className="flex items-center justify-between text-xs text-gray-600"><span>⏱ {post.read_time_min} min</span><span>👁 {post.view_count}</span></div>
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-600"><span>⏱ {post.read_time_min} min</span><span>👁 {post.view_count}</span></div>
       </div>
     </Link>
   );

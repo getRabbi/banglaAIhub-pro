@@ -19,13 +19,13 @@ export default async function ToolsPage({ searchParams }: { searchParams: { pric
   const tools = mergeCuratedTools(dbTools, getCuratedTools({ pricing: searchParams.pricing })).slice(0, 60);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+    <div className="mx-auto max-w-7xl px-3 py-8 sm:px-6 sm:py-10">
       <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-2">🛠️ AI টুলস ডিরেক্টরি</h1>
       <p className="text-gray-400 mb-8">সেরা AI টুলস খুঁজুন, তুলনা করুন এবং ব্যবহার শুরু করুন</p>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+      <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {TOOL_USE_CASES.map((item) => (
-          <Link key={item.key} href={`/search?q=${encodeURIComponent(item.query)}`} className="rounded-xl border border-brand-border bg-white/[0.03] p-4 hover:bg-white/[0.06] transition-colors">
-            <div className="flex items-center gap-2 mb-2">
+          <Link key={item.key} href={`/search?q=${encodeURIComponent(item.query)}`} className="rounded-lg border border-brand-border bg-white/[0.03] p-3 hover:bg-white/[0.06] transition-colors sm:p-4">
+            <div className="mb-2 flex items-start gap-2">
               <span className="text-xl">{item.icon}</span>
               <span className="font-semibold text-white">{item.label}</span>
             </div>
@@ -58,7 +58,7 @@ export default async function ToolsPage({ searchParams }: { searchParams: { pric
                 <p className="text-xs text-gray-500 truncate">{tool.tagline_bn || tool.tagline}</p>
               </div>
             </div>
-            <div className="flex items-center justify-between mt-2">
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
               {tool.pricing && PRICING_LABELS[tool.pricing] && <span className={`text-xs px-2 py-0.5 rounded-full border ${PRICING_LABELS[tool.pricing].color}`}>{PRICING_LABELS[tool.pricing].label}</span>}
               {tool.badge && BADGE_LABELS[tool.badge] && <span className="text-xs text-amber-400">{BADGE_LABELS[tool.badge].icon}</span>}
             </div>

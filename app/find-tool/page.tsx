@@ -28,25 +28,25 @@ export default function FindToolPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
-      <h1 className="text-3xl font-extrabold text-white mb-2 text-center">🔍 AI টুল ফাইন্ডার</h1>
+    <div className="mx-auto max-w-2xl px-3 py-8 sm:px-6 sm:py-10">
+      <h1 className="mb-2 text-center text-2xl font-extrabold text-white sm:text-3xl">🔍 AI টুল ফাইন্ডার</h1>
       <p className="text-gray-400 mb-10 text-center">কয়েকটা প্রশ্নের উত্তর দিন — আমরা সেরা টুল সাজেস্ট করবো</p>
 
       {!done ? (
-        <div className="glass-card p-8 animate-fade-in">
+        <div className="glass-card animate-fade-in p-5 sm:p-8">
           <p className="text-sm text-gray-500 mb-2">প্রশ্ন {step + 1}/{QUESTIONS.length}</p>
           <div className="w-full bg-brand-border rounded-full h-1.5 mb-6"><div className="bg-brand-blue h-1.5 rounded-full transition-all" style={{ width: `${((step + 1) / QUESTIONS.length) * 100}%` }} /></div>
           <h2 className="text-xl font-bold text-white mb-6">{QUESTIONS[step].q}</h2>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {QUESTIONS[step].options.map((opt) => (
-              <button key={opt} onClick={() => handleSelect(QUESTIONS[step].id, opt)} className="glass-card card-hover p-4 text-left text-gray-300 hover:text-white font-medium transition-all">
+              <button key={opt} onClick={() => handleSelect(QUESTIONS[step].id, opt)} className="glass-card card-hover p-3 text-left font-medium text-gray-300 transition-all hover:text-white sm:p-4">
                 {opt}
               </button>
             ))}
           </div>
         </div>
       ) : (
-        <div className="glass-card p-8 text-center animate-fade-in">
+        <div className="glass-card animate-fade-in p-5 text-center sm:p-8">
           <p className="text-4xl mb-4">✅</p>
           <h2 className="text-xl font-bold text-white mb-4">আপনার জন্য সেরা টুলস খুঁজছি...</h2>
           <p className="text-gray-400 mb-6">
@@ -54,8 +54,10 @@ export default function FindToolPage() {
             বাজেট: <span className="text-white font-medium">{answers.budget}</span> · 
             লেভেল: <span className="text-white font-medium">{answers.skill}</span>
           </p>
-          <Link href={`/search?q=${encodeURIComponent(getRecommendation())}`} className="btn-primary inline-block">🔍 টুলস দেখুন</Link>
-          <button onClick={() => { setStep(0); setAnswers({}); setDone(false); }} className="btn-secondary ml-3">আবার শুরু করুন</button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <Link href={`/search?q=${encodeURIComponent(getRecommendation())}`} className="btn-primary">🔍 টুলস দেখুন</Link>
+            <button onClick={() => { setStep(0); setAnswers({}); setDone(false); }} className="btn-secondary">আবার শুরু করুন</button>
+          </div>
         </div>
       )}
     </div>

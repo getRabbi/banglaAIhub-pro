@@ -29,6 +29,7 @@ def _missing_column_name(error: Exception) -> str | None:
     patterns = [
         r"column blog_posts\.([a-zA-Z0-9_]+) does not exist",
         r"column social_posts\.([a-zA-Z0-9_]+) does not exist",
+        r"column \"?([a-zA-Z0-9_]+)\"? of relation \"?(?:blog_posts|social_posts)\"? does not exist",
         r"Could not find the '([a-zA-Z0-9_]+)' column",
     ]
     for pattern in patterns:
@@ -40,7 +41,7 @@ def _missing_column_name(error: Exception) -> str | None:
 
 def _insert_blog_post(supabase, record: dict):
     payload = dict(record)
-    for _ in range(12):
+    for _ in range(len(payload) + 5):
         try:
             return supabase.table("blog_posts").insert(payload).execute()
         except Exception as e:
@@ -118,6 +119,7 @@ def publish_to_blog(original: dict, bangla: dict) -> dict | None:
     hook = bangla["bangla_hook"]
     title = bangla["bangla_title"]
     meta_description = bangla.get("meta_description", hook[:155])
+    source_platform = SOURCE_PLATFORM_BY_SOURCE.get(original["source"], "manual")
     image = find_blog_image(
         title=title,
         category=category,
@@ -125,6 +127,7 @@ def publish_to_blog(original: dict, bangla: dict) -> dict | None:
     )
 
     record = {
+        # Current/live schema aliases.
         "title": title,
         "slug": slug,
         "excerpt_bn": hook,
@@ -141,7 +144,7 @@ def publish_to_blog(original: dict, bangla: dict) -> dict | None:
         "tags": tags,
         "related_tool_ids": [],
         "has_affiliate_links": False,
-        "source_platform": SOURCE_PLATFORM_BY_SOURCE.get(original["source"], "manual"),
+        "source_platform": source_platform,
         "source_url": original.get("source_url", ""),
         "source_title": original.get("original_title", ""),
         "internal_links": [],
@@ -149,6 +152,24 @@ def publish_to_blog(original: dict, bangla: dict) -> dict | None:
         "view_count": 0,
         "share_count": 0,
         "published_at": published_at,
+        # Legacy schema aliases from supabase_migration.sql.
+        "source": source_platform,
+        "original_title": original.get("original_title", ""),
+        "original_body": original.get("original_body", ""),
+        "title_bn": title,
+        "body_bn": body,
+        "hook_bn": hook,
+        "blog_slug": slug,
+        "category": category,
+        "read_time_min": read_time,
+        "engagement_score": original.get("engagement_score", 0),
+        "content_hash": c_hash,
+        "is_published": True,
+        "fb_posted": False,
+        # Transitional aliases used by older admin pages/API versions.
+        "bangla_title": title,
+        "bangla_body": body,
+        "bangla_hook": hook,
     }
     if not category_id:
         record.pop("category_id", None)
@@ -199,14 +220,26 @@ def _generate_tags(original: dict, category: str) -> list[str]:
 def get_unpublished_to_fb() -> list[dict]:
     supabase = get_supabase()
     try:
-        result = (
-            supabase.table("blog_posts")
-            .select("*")
-            .eq("status", "published")
-            .order("published_at", desc=True)
-            .limit(5)
-            .execute()
-        )
+        try:
+            result = (
+                supabase.table("blog_posts")
+                .select("*")
+                .eq("status", "published")
+                .order("published_at", desc=True)
+                .limit(5)
+                .execute()
+            )
+        except Exception as e:
+            if _missing_column_name(e) != "status":
+                raise
+            result = (
+                supabase.table("blog_posts")
+                .select("*")
+                .eq("is_published", True)
+                .order("published_at", desc=True)
+                .limit(5)
+                .execute()
+            )
         posts = result.data or []
         posted_ids = set()
         if posts:
@@ -225,8 +258,8 @@ def get_unpublished_to_fb() -> list[dict]:
         for post in posts:
             slug = post.get("blog_slug") or post.get("slug")
             post["blog_slug"] = slug
-            post["bangla_title"] = post.get("bangla_title") or post.get("title")
-            post["bangla_hook"] = post.get("bangla_hook") or post.get("excerpt_bn")
+            post["bangla_title"] = post.get("bangla_title") or post.get("title_bn") or post.get("title")
+            post["bangla_hook"] = post.get("bangla_hook") or post.get("hook_bn") or post.get("excerpt_bn")
             post["category"] = post.get("category") or _category_from_tags(post.get("tags"))
             post["source"] = post.get("source") or post.get("source_platform")
             post["read_time_min"] = post.get("read_time_min") or post.get("reading_time_minutes")

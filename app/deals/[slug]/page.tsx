@@ -25,8 +25,8 @@ export default async function DealDetail({ params }: { params: { slug: string } 
   const bestFor = Array.isArray(deal.best_for_bn) ? deal.best_for_bn : [];
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-      <nav className="mb-8 flex items-center gap-2 text-sm text-gray-500">
+    <div className="mx-auto max-w-5xl px-3 py-8 sm:px-6 sm:py-10">
+      <nav className="mb-8 flex items-center gap-2 overflow-x-auto whitespace-nowrap text-sm text-gray-500 scrollbar-hide">
         <Link href="/" className="hover:text-gray-300">হোম</Link>
         <span>/</span>
         <Link href="/deals" className="hover:text-gray-300">ডিলস</Link>
@@ -47,7 +47,7 @@ export default async function DealDetail({ params }: { params: { slug: string } 
                 </span>
               )}
             </div>
-            <h1 className="text-3xl font-extrabold leading-tight text-white sm:text-5xl">{deal.title_bn}</h1>
+            <h1 className="text-2xl font-extrabold leading-tight text-white sm:text-5xl">{deal.title_bn}</h1>
             {deal.tools && (
               <Link href={`/tools/${deal.tools.slug}`} className="mt-4 inline-flex text-sm font-semibold text-cyan-200 hover:underline">
                 {deal.tools.name} রিভিউ দেখুন
@@ -60,13 +60,13 @@ export default async function DealDetail({ params }: { params: { slug: string } 
             <p className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-gray-500">Deal snapshot</p>
             <div className="space-y-3">
               {deal.original_price && (
-                <div className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/[0.035] p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/[0.035] p-3">
                   <span className="text-sm text-gray-400">Regular</span>
                   <span className="text-sm text-gray-600 line-through">{deal.original_price}</span>
                 </div>
               )}
               {deal.deal_price && (
-                <div className="flex items-center justify-between gap-3 rounded-lg border border-emerald-300/20 bg-emerald-300/10 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-300/20 bg-emerald-300/10 p-3">
                   <span className="text-sm text-emerald-100">Deal</span>
                   <span className="text-lg font-extrabold text-emerald-200">{deal.deal_price}</span>
                 </div>
@@ -94,7 +94,7 @@ export default async function DealDetail({ params }: { params: { slug: string } 
             <h2 className="mb-4 text-xl font-extrabold text-white">এই deal-এ কী পাবেন</h2>
             <div className="space-y-3">
               {highlights.map((item: string) => (
-                <div key={item} className="flex gap-3 rounded-lg border border-white/10 bg-white/[0.035] p-3 text-sm leading-7 text-gray-300">
+                <div key={item} className="flex items-start gap-3 rounded-lg border border-white/10 bg-white/[0.035] p-3 text-sm leading-7 text-gray-300">
                   <span className="text-emerald-300">✓</span>
                   <span>{item}</span>
                 </div>
@@ -108,7 +108,7 @@ export default async function DealDetail({ params }: { params: { slug: string } 
             <h2 className="mb-4 text-xl font-extrabold text-white">কাদের জন্য ভালো</h2>
             <div className="space-y-3">
               {bestFor.map((item: string) => (
-                <div key={item} className="flex gap-3 rounded-lg border border-white/10 bg-white/[0.035] p-3 text-sm leading-7 text-gray-300">
+                <div key={item} className="flex items-start gap-3 rounded-lg border border-white/10 bg-white/[0.035] p-3 text-sm leading-7 text-gray-300">
                   <span className="text-cyan-300">•</span>
                   <span>{item}</span>
                 </div>

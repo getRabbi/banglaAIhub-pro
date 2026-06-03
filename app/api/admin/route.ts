@@ -2,6 +2,113 @@ import { createServerClient } from "@/lib/supabase";
 import { NextRequest, NextResponse } from "next/server";
 import { normalizeBlogPost } from "@/lib/schema-normalizers";
 
+const CATEGORY_SLUG_BY_BLOG_TYPE: Record<string, string> = {
+  "money-making": "ai-business",
+  "ai-tools": "ai-automation",
+  "tech-news": "ai-research",
+  "product-review": "ai-productivity",
+};
+
+function missingColumnName(error: any): string | null {
+  const message = String(error?.message || error || "");
+  const patterns = [
+    /Could not find the '([a-zA-Z0-9_]+)' column/i,
+    /column blog_posts\.([a-zA-Z0-9_]+) does not exist/i,
+    /column "?([a-zA-Z0-9_]+)"? of relation "?blog_posts"? does not exist/i,
+  ];
+  for (const pattern of patterns) {
+    const match = message.match(pattern);
+    if (match?.[1]) return match[1];
+  }
+  return null;
+}
+
+function compactPayload(payload: Record<string, any>) {
+  return Object.fromEntries(Object.entries(payload).filter(([, value]) => value !== undefined));
+}
+
+async function getCategoryId(sb: any, category?: string) {
+  const slug = category ? CATEGORY_SLUG_BY_BLOG_TYPE[category] : "";
+  if (!slug) return undefined;
+  const { data, error } = await sb.from("categories").select("id").eq("slug", slug).limit(1);
+  if (error || !data?.[0]?.id) return undefined;
+  return data[0].id;
+}
+
+function wordCount(text: string) {
+  return (text || "").trim().split(/\s+/).filter(Boolean).length;
+}
+
+function estimateReadTime(text: string) {
+  return Math.max(1, Math.round(wordCount(text) / 180));
+}
+
+function buildBlogPostPayload(data: any, categoryId?: number | string) {
+  const title = data.bangla_title || data.title_bn || data.title || "";
+  const body = data.bangla_body || data.body_bn || data.content_bn || "";
+  const hook = data.bangla_hook || data.hook_bn || data.excerpt_bn || "";
+  const slug = data.blog_slug || data.slug || "";
+  const status = data.status || (data.is_published ? "published" : "draft");
+  const readTime = data.read_time_min || data.reading_time_minutes || estimateReadTime(body || hook || title);
+  const tags = Array.isArray(data.tags) ? data.tags : [];
+  const metaDescription = data.meta_description || hook.slice(0, 155);
+
+  return compactPayload({
+    // Current/live schema aliases.
+    title,
+    slug,
+    excerpt_bn: hook,
+    content_bn: body,
+    reading_time_minutes: readTime,
+    word_count: wordCount(body),
+    meta_title: title.slice(0, 70),
+    meta_description: metaDescription,
+    category_id: categoryId,
+    tags,
+    status,
+    scheduled_at: status === "scheduled" ? data.scheduled_at || null : null,
+    thumbnail_url: data.thumbnail_url || null,
+    thumbnail_alt: data.thumbnail_alt || title,
+    og_image_url: data.thumbnail_url || data.og_image_url || null,
+    // Legacy schema aliases from supabase_migration.sql.
+    title_bn: title,
+    body_bn: body,
+    hook_bn: hook,
+    blog_slug: slug,
+    category: data.category,
+    read_time_min: readTime,
+    is_published: status === "published",
+    // Transitional aliases used by older admin/API versions.
+    bangla_title: title,
+    bangla_body: body,
+    bangla_hook: hook,
+  });
+}
+
+async function updateBlogPostCompatible(sb: any, id: string | number, payload: Record<string, any>) {
+  const next = { ...payload };
+  for (let i = 0; i < Object.keys(payload).length + 5; i += 1) {
+    const { error } = await sb.from("blog_posts").update(next).eq("id", id);
+    if (!error) return null;
+    const missing = missingColumnName(error);
+    if (!missing || !(missing in next)) return error;
+    delete next[missing];
+  }
+  return { message: "Could not update blog post after removing unsupported columns." };
+}
+
+async function insertBlogPostCompatible(sb: any, payload: Record<string, any>) {
+  const next = { ...payload };
+  for (let i = 0; i < Object.keys(payload).length + 5; i += 1) {
+    const { data, error } = await sb.from("blog_posts").insert(next).select("*").single();
+    if (!error) return { data, error: null };
+    const missing = missingColumnName(error);
+    if (!missing || !(missing in next)) return { data: null, error };
+    delete next[missing];
+  }
+  return { data: null, error: { message: "Could not insert blog post after removing unsupported columns." } };
+}
+
 export async function GET(req: NextRequest) {
   const sb = createServerClient();
   const action = req.nextUrl.searchParams.get("action");
@@ -38,8 +145,8 @@ export async function POST(req: NextRequest) {
 
   // ─── Posts ───
   if (action === "update_post") {
-    const { bangla_title, bangla_body, bangla_hook, meta_description, blog_slug, category, tags, status, scheduled_at, thumbnail_url } = data;
-    const { error } = await sb.from("blog_posts").update({ bangla_title, bangla_body, bangla_hook, meta_description, blog_slug, category, tags, status, scheduled_at, thumbnail_url }).eq("id", id);
+    const categoryId = await getCategoryId(sb, data?.category);
+    const error = await updateBlogPostCompatible(sb, id, buildBlogPostPayload(data, categoryId));
     return NextResponse.json({ ok: !error, error: error?.message });
   }
 
@@ -136,32 +243,45 @@ export async function POST(req: NextRequest) {
 
       // Read time
       const readTime = Math.max(1, Math.round(wordCount / 180));
+      const categoryId = await getCategoryId(sb, category);
 
       const record = {
-        source: sourceUrl ? "manual" : "manual",
+        ...buildBlogPostPayload(
+          {
+            bangla_title: content.bangla_title,
+            bangla_body: content.bangla_body,
+            bangla_hook: content.bangla_hook,
+            meta_description: content.meta_description || content.bangla_hook?.slice(0, 155),
+            blog_slug: slug,
+            category,
+            tags: [category, "manual"],
+            read_time_min: readTime,
+            status: "published",
+            thumbnail_url: "",
+          },
+          categoryId,
+        ),
+        source: "manual",
+        source_platform: "manual",
         source_url: sourceUrl || "",
         original_title: title,
-        bangla_title: content.bangla_title,
-        bangla_body: content.bangla_body,
-        bangla_hook: content.bangla_hook,
-        meta_description: content.meta_description || content.bangla_hook?.slice(0, 155),
-        blog_slug: slug,
-        category,
-        tags: [category, "manual"],
-        read_time_min: readTime,
+        original_body: sourceUrl || title,
+        source_title: title,
         quality_score: qualityScore,
         quality_grade: qualityGrade,
-        status: "published",
+        engagement_score: 0,
+        fb_posted: false,
         published_at: new Date().toISOString(),
       };
 
-      const { data: post, error } = await sb.from("blog_posts").insert(record).select("id, blog_slug").single();
+      const { data: post, error } = await insertBlogPostCompatible(sb, record);
       if (error) return NextResponse.json({ ok: false, error: error.message });
+      const normalized = normalizeBlogPost(post);
 
       return NextResponse.json({
         ok: true,
         id: post.id,
-        slug: post.blog_slug,
+        slug: normalized.blog_slug,
         title: content.bangla_title,
         quality_score: qualityScore,
         quality_grade: qualityGrade,

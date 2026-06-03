@@ -16,7 +16,7 @@ export default async function GuidesPage() {
   const guides = items && items.length > 0 ? items : CURATED_GUIDES;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+    <div className="mx-auto max-w-7xl px-3 py-8 sm:px-6 sm:py-10">
       <h1 className="text-3xl font-extrabold text-white mb-2">📚 গাইড</h1>
       <p className="text-gray-400 mb-8">AI টুলস ব্যবহারের বিস্তারিত গাইড</p>
       {(!items || items.length === 0) && (
@@ -27,7 +27,7 @@ export default async function GuidesPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {guides.map((item: any) => (
           <Link key={item.id || item.slug} href={`/guides/${item.slug}`} className="glass-card card-hover p-5 group min-h-[180px] flex flex-col">
-            <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <span className="text-xs px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">Guide</span>
               <span className="text-xs text-gray-600">⏱ {item.read_time_min || 5} মিনিট</span>
             </div>

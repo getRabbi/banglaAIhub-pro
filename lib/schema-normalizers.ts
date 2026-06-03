@@ -2,6 +2,30 @@ const BLOG_CATEGORY_KEYS = ["money-making", "ai-tools", "tech-news", "product-re
 
 type BlogCategory = (typeof BLOG_CATEGORY_KEYS)[number];
 
+function mojibakeScore(value: string): number {
+  return (value.match(/[àâðÃ][\u0080-\u00ff]/g) || []).length;
+}
+
+function repairText(value: unknown): string {
+  const text = typeof value === "string" ? value : "";
+  if (!text || !/[àâðÃ][\u0080-\u00ff]/.test(text)) return text;
+
+  try {
+    const bytes = Array.from(text, (char) => {
+      const code = char.charCodeAt(0);
+      return code <= 255 ? `%${code.toString(16).padStart(2, "0")}` : encodeURIComponent(char);
+    }).join("");
+    const decoded = decodeURIComponent(bytes);
+    return mojibakeScore(decoded) < mojibakeScore(text) ? decoded : text;
+  } catch {
+    return text;
+  }
+}
+
+function repairTextArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item) => typeof item === "string").map(repairText) : [];
+}
+
 function firstLegacyCategory(tags: unknown): BlogCategory | null {
   if (!Array.isArray(tags)) return null;
   return (tags.find((tag) => BLOG_CATEGORY_KEYS.includes(tag as BlogCategory)) as BlogCategory | undefined) || null;
@@ -32,6 +56,7 @@ function deriveBlogCategory(row: any): BlogCategory {
     row?.source_platform,
     ...(Array.isArray(row?.tags) ? row.tags : []),
   ]
+    .map(repairText)
     .join(" ")
     .toLowerCase();
 
@@ -48,10 +73,11 @@ function deriveBlogCategory(row: any): BlogCategory {
 
 export function normalizeBlogPost(row: any) {
   const slug = row?.blog_slug || row?.slug || "";
-  const title = row?.bangla_title || row?.title_bn || row?.title || row?.source_title || "Untitled";
-  const body = row?.bangla_body || row?.body_bn || row?.content_bn || row?.body || row?.content || "";
-  const excerpt = row?.bangla_hook || row?.hook_bn || row?.excerpt_bn || row?.summary_bn || row?.meta_description || "";
+  const title = repairText(row?.bangla_title || row?.title_bn || row?.title || row?.source_title || "Untitled");
+  const body = repairText(row?.bangla_body || row?.body_bn || row?.content_bn || row?.body || row?.content || "");
+  const excerpt = repairText(row?.bangla_hook || row?.hook_bn || row?.excerpt_bn || row?.summary_bn || row?.meta_description || "");
   const publishedAt = row?.published_at || row?.created_at || new Date(0).toISOString();
+  const tags = repairTextArray(row?.tags);
 
   return {
     ...row,
@@ -60,14 +86,15 @@ export function normalizeBlogPost(row: any) {
     bangla_hook: excerpt,
     blog_slug: slug,
     blog_url: row?.blog_url || `/blog/${slug}`,
-    meta_description: row?.meta_description || excerpt,
+    meta_description: repairText(row?.meta_description || excerpt),
     category: deriveBlogCategory(row),
     status: row?.status || (row?.is_published ? "published" : "draft"),
-    tags: Array.isArray(row?.tags) ? row.tags : [],
+    tags,
     source: row?.source || row?.source_platform || "manual",
     read_time_min: row?.read_time_min || row?.reading_time_minutes || row?.read_time || estimateNormalizedReadTime(body || excerpt || title),
     view_count: row?.view_count || 0,
     published_at: publishedAt,
+    updated_at: row?.updated_at || publishedAt,
     thumbnail_url: row?.thumbnail_url || undefined,
     thumbnail_alt: row?.thumbnail_alt || title,
     og_image_url: row?.og_image_url || row?.thumbnail_url || undefined,

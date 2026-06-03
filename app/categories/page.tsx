@@ -22,12 +22,12 @@ export default async function CategoriesPage() {
   const displayCount = (cat: any) => Math.max(cat.tool_count || 0, dbCountFor(cat) + getCuratedTools({ categorySlug: cat.slug }).length);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+    <div className="mx-auto max-w-7xl px-3 py-8 sm:px-6 sm:py-10">
       <h1 className="text-3xl font-extrabold text-white mb-2">📂 AI টুলস ক্যাটাগরি</h1>
       <p className="text-gray-400 mb-8">আপনার প্রয়োজন অনুযায়ী সেরা AI টুল খুঁজুন</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {(categories || []).map((cat: any) => (
-          <Link key={cat.id} href={`/categories/${cat.slug}`} className="glass-card card-hover p-6 text-center group">
+          <Link key={cat.id} href={`/categories/${cat.slug}`} className="glass-card card-hover p-4 text-center group sm:p-6">
             <span className="text-4xl block mb-3">{cat.icon}</span>
             <h2 className="text-lg font-bold text-white group-hover:text-brand-electric transition-colors mb-1">{cat.name_bn}</h2>
             <p className="text-sm text-gray-500 line-clamp-2 mb-2">{cat.description_bn}</p>

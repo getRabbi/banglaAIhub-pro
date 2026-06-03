@@ -12,13 +12,13 @@ export default async function DealsPage() {
   const featured = deals.filter((deal: any) => deal.is_featured).slice(0, 3);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+    <div className="mx-auto max-w-7xl px-3 py-8 sm:px-6 sm:py-10">
       <section className="mb-8 rounded-lg border border-white/10 bg-white/[0.035] p-5 sm:p-8">
         <div className="max-w-3xl">
           <p className="mb-3 inline-flex rounded-lg border border-orange-300/20 bg-orange-300/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-orange-200">
             AI Tools Deals
           </p>
-          <h1 className="text-3xl font-extrabold text-white sm:text-5xl">AI টুলস ডিলস, ফ্রি প্ল্যান ও স্টার্টার অফার</h1>
+          <h1 className="text-2xl font-extrabold leading-tight text-white sm:text-5xl">AI টুলস ডিলস, ফ্রি প্ল্যান ও স্টার্টার অফার</h1>
           <p className="mt-4 text-base leading-8 text-gray-400">
             Paid plan নেওয়ার আগে কোন AI tool free tier, student/startup option বা self-host route দিয়ে test করা যায়, এখানে সেই curated deal posts রাখা হয়েছে।
           </p>
@@ -29,7 +29,7 @@ export default async function DealsPage() {
         <section className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
           {featured.map((deal: any) => (
             <Link key={deal.id} href={`/deals/${deal.slug}`} className="glass-card card-hover p-5">
-              <div className="mb-4 flex items-center justify-between gap-3">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                 <span className="rounded-lg border border-orange-300/20 bg-orange-300/10 px-2.5 py-1 text-xs font-bold text-orange-200">Featured</span>
                 {deal.discount_text && <span className="rounded-lg border border-emerald-300/20 bg-emerald-300/10 px-2.5 py-1 text-xs font-bold text-emerald-200">{deal.discount_text_bn || deal.discount_text}</span>}
               </div>
@@ -67,7 +67,7 @@ export default async function DealsPage() {
                 <span className="font-mono font-bold text-brand-electric">{deal.coupon_code}</span>
               </div>
             )}
-            <div className="mt-5 flex items-center justify-between gap-3 pt-2">
+            <div className="mt-5 flex flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
               <Link href={`/deals/${deal.slug}`} className="text-sm font-semibold text-brand-electric hover:underline">বিস্তারিত দেখুন</Link>
               {deal.source_label && <span className="text-xs text-gray-600">{deal.source_label}</span>}
             </div>

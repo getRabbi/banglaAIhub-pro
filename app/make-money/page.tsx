@@ -16,8 +16,8 @@ export default async function MakeMoneyPage() {
   const posts = (await fetchPublishedBlogPosts(createServerClient(), { orderBy: "published_at", limit: 50 })).filter((post) => post.category === "money-making").slice(0, 20);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
-      <div className="glass-card glow-orange p-6 sm:p-8 mb-10 relative overflow-hidden">
+    <div className="mx-auto max-w-7xl px-3 py-8 sm:px-6 sm:py-10">
+      <div className="glass-card glow-orange p-5 sm:p-8 mb-10 relative overflow-hidden">
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-orange via-brand-green to-brand-cyan" />
         <div className="relative"><h1 className="text-2xl sm:text-3xl font-extrabold text-white mb-2">💰 AI দিয়ে অনলাইনে আয় করুন</h1><p className="text-gray-400 leading-8">ফ্রিল্যান্সিং, কনটেন্ট মনিটাইজেশন, ডিজিটাল সার্ভিস — practical গাইড বাংলায়</p></div>
       </div>
@@ -33,7 +33,7 @@ export default async function MakeMoneyPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {INCOME_ROADMAPS.map((item) => (
             <article key={item.slug} id={item.slug} className="glass-card glow-orange p-5">
-              <div className="flex items-center justify-between gap-2 mb-4">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                 <span className="text-xs px-2.5 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-300">Income System</span>
                 <span className="text-xs text-gray-600">{item.tools.length} tools</span>
               </div>
@@ -43,7 +43,7 @@ export default async function MakeMoneyPage() {
                 <h3 className="text-sm font-semibold text-gray-300 mb-2">কাজের ধাপ</h3>
                 <ol className="space-y-2">
                   {item.steps.map((step, index) => (
-                    <li key={step} className="flex gap-2 text-sm text-gray-400 leading-6">
+                    <li key={step} className="flex items-start gap-2 text-sm text-gray-400 leading-6">
                       <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white/5 text-xs text-gray-300">{index + 1}</span>
                       <span>{step}</span>
                     </li>

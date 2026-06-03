@@ -430,7 +430,7 @@ function SectionHeader({ eyebrow, title, description }: { eyebrow: string; title
   return (
     <div className="mb-4">
       <p className="mb-2 text-xs font-bold uppercase tracking-[0.12em] text-cyan-200/80">{eyebrow}</p>
-      <h2 className="text-2xl font-extrabold text-white sm:text-3xl">{title}</h2>
+      <h2 className="text-xl font-extrabold leading-tight text-white sm:text-3xl">{title}</h2>
       {description && <p className="mt-2 max-w-3xl text-sm leading-7 text-gray-400">{description}</p>}
     </div>
   );
@@ -452,7 +452,7 @@ function DetailPanel({
   const styles = TONE_CLASSES[tone];
   return (
     <div className={`min-w-0 rounded-lg border p-4 shadow-[0_18px_40px_rgba(0,0,0,0.16)] ${styles.box}`}>
-      <div className="mb-3 flex items-center gap-3">
+      <div className="mb-3 flex items-start gap-3">
         {icon && <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg border text-base ${styles.icon}`}>{icon}</span>}
         <div className="min-w-0">
           {label && <p className={`text-xs font-bold uppercase tracking-[0.1em] ${styles.label}`}>{label}</p>}
@@ -468,7 +468,7 @@ function NumberedPanel({ index, title, text, tone = "neutral" }: { index: number
   const styles = TONE_CLASSES[tone];
   return (
     <div className={`rounded-lg border p-4 ${styles.box}`}>
-      <div className="mb-3 flex items-center gap-3">
+      <div className="mb-3 flex items-start gap-3">
         <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg border text-sm font-black ${styles.icon}`}>{index}</span>
         <h3 className="text-base font-bold text-white">{title}</h3>
       </div>
@@ -641,7 +641,7 @@ export default async function ToolDetail({ params }: { params: { slug: string } 
                     </span>
                   )}
                 </div>
-                <h1 className="max-w-4xl text-3xl font-black leading-tight text-white sm:text-5xl">{tool.name}</h1>
+                <h1 className="max-w-4xl text-2xl font-black leading-tight text-white sm:text-5xl">{tool.name}</h1>
                 <p className="mt-4 max-w-3xl text-base leading-8 text-gray-300 sm:text-lg">{tool.tagline_bn || tool.tagline || company.marketPosition}</p>
                 <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   {quickStats.map((item) => (
@@ -664,7 +664,7 @@ export default async function ToolDetail({ params }: { params: { slug: string } 
                 const tone = TONE_CLASSES[item.tone];
                 return (
                   <div key={item.label} className="rounded-lg border border-white/10 bg-white/[0.035] p-3">
-                    <div className="mb-2 flex items-center justify-between gap-3">
+                    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                       <span className="text-sm font-semibold text-gray-200">{item.label}</span>
                       <span className={`text-xs font-bold ${tone.label}`}>{getFitLabel(item.score)}</span>
                     </div>
@@ -678,7 +678,7 @@ export default async function ToolDetail({ params }: { params: { slug: string } 
           </aside>
         </section>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_340px]">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px] lg:gap-8">
           <main className="min-w-0">
             <section className="mb-8">
               <SectionHeader
