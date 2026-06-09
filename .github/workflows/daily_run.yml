@@ -45,15 +45,16 @@ jobs:
         shell: bash
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           missing=()
-          [ -z "$SUPABASE_URL" ] && missing+=("SUPABASE_URL")
+          [ -z "${SUPABASE_URL:-$NEXT_PUBLIC_SUPABASE_URL}" ] && missing+=("SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL")
           [ -z "$SUPABASE_SERVICE_KEY" ] && missing+=("SUPABASE_SERVICE_KEY")
           if [ "${#missing[@]}" -gt 0 ]; then
-            echo "Missing required secrets: ${missing[*]}"
+            echo "::error::Missing required secrets: ${missing[*]}"
             echo "run_pipeline=false" >> "$GITHUB_OUTPUT"
-            exit 0
+            exit 1
           fi
           echo "run_pipeline=true" >> "$GITHUB_OUTPUT"
 
@@ -74,6 +75,7 @@ jobs:
           OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
           REWRITE_PROVIDER: ${{ vars.REWRITE_PROVIDER }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           FB_PAGE_ACCESS_TOKEN: ${{ secrets.FB_PAGE_ACCESS_TOKEN }}
           FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
