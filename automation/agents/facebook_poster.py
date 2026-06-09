@@ -3,7 +3,7 @@
 import time
 import requests
 
-from config import FB_PAGE_ACCESS_TOKEN, FB_PAGE_ID, CATEGORIES
+from config import FB_PAGE_ACCESS_TOKEN, FB_PAGE_ID, FB_POST_FIRST_COMMENT, CATEGORIES
 
 GRAPH_URL = "https://graph.facebook.com/v19.0"
 
@@ -52,6 +52,9 @@ def post_to_facebook(
     except Exception as e:
         print(f"[ERROR] FB post: {e}")
         return None, None
+
+    if not FB_POST_FIRST_COMMENT:
+        return fb_post_id, None
 
     time.sleep(3)
     comment_text = f"""👉 পুরো আর্টিকেল: {blog_url}

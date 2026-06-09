@@ -108,6 +108,7 @@ SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
 # ─── Facebook Page API ───
 FB_PAGE_ACCESS_TOKEN = os.getenv("FB_PAGE_ACCESS_TOKEN", "")
 FB_PAGE_ID = os.getenv("FB_PAGE_ID", "")
+FB_POST_FIRST_COMMENT = _env("FB_POST_FIRST_COMMENT", "false").lower() in {"1", "true", "yes"}
 
 # ─── Image Discovery ───
 UNSPLASH_ACCESS_KEY = _env("UNSPLASH_ACCESS_KEY", "")
