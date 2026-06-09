@@ -2,14 +2,14 @@ name: BanglaAIHub — Content Automation
 
 on:
   schedule:
-    # Every 3 hours. GitHub Actions is the primary always-on scheduler.
-    - cron: "17 */3 * * *"
+    # Daily at 09:15 Bangladesh time (03:15 UTC).
+    - cron: "15 3 * * *"
   workflow_dispatch:
     inputs:
       posts_per_run:
         description: "Number of posts to publish in this run"
         required: false
-        default: "3"
+        default: "1"
 
 concurrency:
   group: banglaaihub-content-automation
@@ -85,7 +85,7 @@ jobs:
           UNSPLASH_SECRET_KEY: ${{ secrets.UNSPLASH_SECRET_KEY }}
           CONTENT_IMAGE_PROVIDER: ${{ vars.CONTENT_IMAGE_PROVIDER }}
           BLOG_BASE_URL: ${{ secrets.BLOG_BASE_URL }}
-          POSTS_PER_RUN: ${{ inputs.posts_per_run || vars.POSTS_PER_RUN || '3' }}
+          POSTS_PER_RUN: ${{ inputs.posts_per_run || vars.POSTS_PER_RUN || '1' }}
           AUTOMATION_NAME: "BanglaAIHub Automation"
         run: |
           status=1

@@ -41,7 +41,8 @@ def is_duplicate(supabase: Client, hash_val: str, post: dict | None = None) -> b
             .eq("content_hash", hash_val)
             .execute()
         )
-        return len(result.data) > 0
+        if len(result.data) > 0:
+            return True
     except Exception as e:
         if "content_hash" not in str(e):
             raise
