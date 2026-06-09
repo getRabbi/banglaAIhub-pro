@@ -9,6 +9,13 @@ def _env(name: str, default: str = "") -> str:
     return os.getenv(name) or default
 
 
+def _env_int(name: str, default: int) -> int:
+    try:
+        return int(_env(name, str(default)))
+    except ValueError:
+        return default
+
+
 AUTOMATION_NAME = _env("AUTOMATION_NAME", "BanglaAIHub Automation")
 AUTOMATION_USER_AGENT = _env(
     "AUTOMATION_USER_AGENT",
@@ -109,6 +116,8 @@ SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
 FB_PAGE_ACCESS_TOKEN = os.getenv("FB_PAGE_ACCESS_TOKEN", "")
 FB_PAGE_ID = os.getenv("FB_PAGE_ID", "")
 FB_POST_FIRST_COMMENT = _env("FB_POST_FIRST_COMMENT", "false").lower() in {"1", "true", "yes"}
+FB_LINK_STRATEGY = _env("FB_LINK_STRATEGY", "soft").lower()
+FB_DIRECT_LINK_EVERY = max(1, _env_int("FB_DIRECT_LINK_EVERY", 4))
 
 # ─── Image Discovery ───
 UNSPLASH_ACCESS_KEY = _env("UNSPLASH_ACCESS_KEY", "")

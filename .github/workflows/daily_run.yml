@@ -79,6 +79,9 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           FB_PAGE_ACCESS_TOKEN: ${{ secrets.FB_PAGE_ACCESS_TOKEN }}
           FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+          FB_LINK_STRATEGY: ${{ vars.FB_LINK_STRATEGY || 'soft' }}
+          FB_DIRECT_LINK_EVERY: ${{ vars.FB_DIRECT_LINK_EVERY || '4' }}
+          FB_POST_FIRST_COMMENT: ${{ vars.FB_POST_FIRST_COMMENT || 'false' }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
