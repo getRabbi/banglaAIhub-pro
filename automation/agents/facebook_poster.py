@@ -175,8 +175,10 @@ def _direct_cta(blog_url: str) -> str:
 
 def _soft_cta(title: str) -> str:
     return (
-        "পুরো guide পড়তে BanglaAIHub website বা Telegram update দেখুন.\n"
-        f"Search title: {title}"
+        "পুরো guide পড়তে:\n"
+        "1. BanglaAIHub website open করুন\n"
+        f"2. Search করুন: {title}\n"
+        "3. অথবা Telegram channel-এর latest update দেখুন"
     )
 
 
