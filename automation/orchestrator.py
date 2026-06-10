@@ -107,6 +107,46 @@ def _finish_job(
         print(f"[WARN] Job finish update skipped: {e}")
 
 
+def _run_facebook_drip(supabase, job_id: int | None, stats: dict) -> None:
+    print("\n📘 Phase 4: Pending FB...")
+    try:
+        if FB_POSTS_PER_RUN <= 0:
+            stats["fb_skipped"] += 1
+            print("  Facebook drip disabled by FB_POSTS_PER_RUN=0")
+        else:
+            can_post, wait_message = get_social_post_wait("facebook", FB_MIN_POST_INTERVAL_HOURS)
+            if not can_post:
+                stats["fb_skipped"] += 1
+                print(f"  Skipped: {wait_message}")
+                _log_job(supabase, job_id, "info", "Facebook drip skipped", {"reason": wait_message})
+            else:
+                pending_fb_posts = get_unpublished_to_fb(limit=1)
+                if not pending_fb_posts:
+                    print("  No pending Facebook posts.")
+                for post in pending_fb_posts:
+                    fb_pid, fb_cid = post_to_facebook(
+                        hook=post["bangla_hook"],
+                        blog_url=post["blog_url"],
+                        bangla_title=post["bangla_title"],
+                        category=post.get("category", "tech-news"),
+                        image_url=post.get("thumbnail_url"),
+                    )
+                    if fb_pid:
+                        mark_fb_posted(post["id"], fb_pid, fb_cid or "")
+                        stats["fb_posted"] += 1
+                        _log_job(
+                            supabase,
+                            job_id,
+                            "info",
+                            "Facebook drip posted",
+                            {"post_id": post.get("id"), "min_interval_hours": FB_MIN_POST_INTERVAL_HOURS},
+                        )
+    except Exception as e:
+        print(f"  Pending error: {e}")
+        stats["errors"].append(f"Pending FB: {e}")
+        _log_job(supabase, job_id, "warn", "Pending Facebook posts failed", {"error": str(e)})
+
+
 def run_pipeline():
     start = datetime.now()
     stats = {
@@ -153,6 +193,7 @@ def run_pipeline():
     if not all_posts:
         msg = f"⚠️ {AUTOMATION_NAME}: No posts scraped. Check credentials."
         print(msg)
+        _run_facebook_drip(supabase, job_id, stats)
         send_telegram(msg)
         _finish_job(supabase, job_id, stats, "completed", "No posts scraped.")
         return
@@ -195,6 +236,7 @@ def run_pipeline():
     print(f"  Unique: {len(unique)} | Dupes skipped: {stats['dupes']}")
 
     if not unique:
+        _run_facebook_drip(supabase, job_id, stats)
         send_telegram(f"ℹ️ {AUTOMATION_NAME}: All dupes, no new content.")
         _finish_job(supabase, job_id, stats, "completed", "All candidates were duplicates.")
         return
@@ -280,43 +322,7 @@ def run_pipeline():
             _log_job(supabase, job_id, "warn", "Telegram post failed", {"error": str(e)})
 
     # ─── Phase 4: Pending FB posts ───
-    print("\n📘 Phase 4: Pending FB...")
-    try:
-        if FB_POSTS_PER_RUN <= 0:
-            stats["fb_skipped"] += 1
-            print("  Facebook drip disabled by FB_POSTS_PER_RUN=0")
-        else:
-            can_post, wait_message = get_social_post_wait("facebook", FB_MIN_POST_INTERVAL_HOURS)
-            if not can_post:
-                stats["fb_skipped"] += 1
-                print(f"  Skipped: {wait_message}")
-                _log_job(supabase, job_id, "info", "Facebook drip skipped", {"reason": wait_message})
-            else:
-                pending_fb_posts = get_unpublished_to_fb(limit=1)
-                if not pending_fb_posts:
-                    print("  No pending Facebook posts.")
-                for post in pending_fb_posts:
-                    fb_pid, fb_cid = post_to_facebook(
-                        hook=post["bangla_hook"],
-                        blog_url=post["blog_url"],
-                        bangla_title=post["bangla_title"],
-                        category=post.get("category", "tech-news"),
-                        image_url=post.get("thumbnail_url"),
-                    )
-                    if fb_pid:
-                        mark_fb_posted(post["id"], fb_pid, fb_cid or "")
-                        stats["fb_posted"] += 1
-                        _log_job(
-                            supabase,
-                            job_id,
-                            "info",
-                            "Facebook drip posted",
-                            {"post_id": post.get("id"), "min_interval_hours": FB_MIN_POST_INTERVAL_HOURS},
-                        )
-    except Exception as e:
-        print(f"  Pending error: {e}")
-        stats["errors"].append(f"Pending FB: {e}")
-        _log_job(supabase, job_id, "warn", "Pending Facebook posts failed", {"error": str(e)})
+    _run_facebook_drip(supabase, job_id, stats)
 
     # ─── Report ───
     elapsed = (datetime.now() - start).total_seconds()
