@@ -2,16 +2,19 @@ name: BanglaAIHub — Content Automation
 
 on:
   schedule:
-    # 09:15, 15:15, and 21:15 Bangladesh time.
-    - cron: "15 3 * * *"
-    - cron: "15 9 * * *"
-    - cron: "15 15 * * *"
+    # Bangladesh engagement windows:
+    # 08:15 morning, 12:45 lunch, 15:30 afternoon, 18:45 evening, 22:00 prime night.
+    - cron: "15 2 * * *"
+    - cron: "45 6 * * *"
+    - cron: "30 9 * * *"
+    - cron: "45 12 * * *"
+    - cron: "0 16 * * *"
   workflow_dispatch:
     inputs:
       posts_per_run:
         description: "Number of posts to publish in this run"
         required: false
-        default: "1"
+        default: "2"
 
 concurrency:
   group: banglaaihub-content-automation
@@ -23,7 +26,7 @@ permissions:
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     defaults:
       run:
         working-directory: automation
@@ -92,7 +95,7 @@ jobs:
           UNSPLASH_SECRET_KEY: ${{ secrets.UNSPLASH_SECRET_KEY }}
           CONTENT_IMAGE_PROVIDER: ${{ vars.CONTENT_IMAGE_PROVIDER }}
           BLOG_BASE_URL: ${{ secrets.BLOG_BASE_URL }}
-          POSTS_PER_RUN: ${{ inputs.posts_per_run || vars.POSTS_PER_RUN || '1' }}
+          POSTS_PER_RUN: ${{ inputs.posts_per_run || vars.POSTS_PER_RUN || '2' }}
           AUTOMATION_NAME: "BanglaAIHub Automation"
         run: |
           status=1
