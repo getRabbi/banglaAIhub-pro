@@ -129,7 +129,12 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 
 # ─── Blog Settings ───
 BLOG_BASE_URL = os.getenv("BLOG_BASE_URL", "https://banglaaihub.com")
-POSTS_PER_RUN = int(_env("POSTS_PER_RUN", "3"))
+POSTS_PER_RUN = max(1, _env_int("POSTS_PER_RUN", 1))
+
+# Facebook posting is intentionally drip-fed. The pipeline may publish multiple
+# blog articles, but Facebook should never receive a burst from one run.
+FB_POSTS_PER_RUN = max(0, _env_int("FB_POSTS_PER_RUN", 1))
+FB_MIN_POST_INTERVAL_HOURS = max(1, _env_int("FB_MIN_POST_INTERVAL_HOURS", 6))
 
 # ─── Content Categories ───
 CATEGORIES = {

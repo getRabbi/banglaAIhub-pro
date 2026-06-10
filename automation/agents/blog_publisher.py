@@ -1,7 +1,7 @@
 """Blog Publisher - saves generated posts to the live Supabase blog schema."""
 
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from config import BLOG_BASE_URL
 from agents.image_finder import find_blog_image
@@ -217,16 +217,73 @@ def _generate_tags(original: dict, category: str) -> list[str]:
     return tags
 
 
-def get_unpublished_to_fb() -> list[dict]:
+def _parse_datetime(value) -> datetime | None:
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+    try:
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
+def get_social_post_wait(platform: str, min_interval_hours: int) -> tuple[bool, str]:
+    """Return whether a platform can be posted to without breaking the drip gap."""
     supabase = get_supabase()
+    try:
+        try:
+            result = (
+                supabase.table("social_posts")
+                .select("posted_at, created_at")
+                .eq("platform", platform)
+                .eq("status", "posted")
+                .order("posted_at", desc=True)
+                .limit(1)
+                .execute()
+            )
+        except Exception as e:
+            if _missing_column_name(e) != "status":
+                raise
+            result = (
+                supabase.table("social_posts")
+                .select("posted_at, created_at")
+                .eq("platform", platform)
+                .order("posted_at", desc=True)
+                .limit(1)
+                .execute()
+            )
+        rows = result.data or []
+        last_posted_at = _parse_datetime(rows[0].get("posted_at") or rows[0].get("created_at")) if rows else None
+        if not last_posted_at:
+            return True, "No previous social post found."
+
+        next_allowed_at = last_posted_at + timedelta(hours=min_interval_hours)
+        now = datetime.now(timezone.utc)
+        if now < next_allowed_at:
+            minutes = max(1, int((next_allowed_at - now).total_seconds() // 60))
+            return False, (
+                f"Last {platform} post was at {last_posted_at.isoformat()}; "
+                f"next allowed at {next_allowed_at.isoformat()} ({minutes} min remaining)."
+            )
+        return True, f"Last {platform} post was at {last_posted_at.isoformat()}."
+    except Exception as e:
+        print(f"[WARN] Social post interval check skipped: {e}")
+        return False, f"Could not verify last {platform} post time."
+
+
+def get_unpublished_to_fb(limit: int = 20) -> list[dict]:
+    supabase = get_supabase()
+    fetch_limit = max(limit * 10, 100)
     try:
         try:
             result = (
                 supabase.table("blog_posts")
                 .select("*")
                 .eq("status", "published")
-                .order("published_at", desc=True)
-                .limit(5)
+                .order("published_at", desc=False)
+                .limit(fetch_limit)
                 .execute()
             )
         except Exception as e:
@@ -236,21 +293,33 @@ def get_unpublished_to_fb() -> list[dict]:
                 supabase.table("blog_posts")
                 .select("*")
                 .eq("is_published", True)
-                .order("published_at", desc=True)
-                .limit(5)
+                .order("published_at", desc=False)
+                .limit(fetch_limit)
                 .execute()
             )
         posts = result.data or []
         posted_ids = set()
         if posts:
             try:
-                social = (
-                    supabase.table("social_posts")
-                    .select("blog_post_id")
-                    .eq("platform", "facebook")
-                    .in_("blog_post_id", [p["id"] for p in posts])
-                    .execute()
-                )
+                try:
+                    social = (
+                        supabase.table("social_posts")
+                        .select("blog_post_id")
+                        .eq("platform", "facebook")
+                        .eq("status", "posted")
+                        .in_("blog_post_id", [p["id"] for p in posts])
+                        .execute()
+                    )
+                except Exception as e:
+                    if _missing_column_name(e) != "status":
+                        raise
+                    social = (
+                        supabase.table("social_posts")
+                        .select("blog_post_id")
+                        .eq("platform", "facebook")
+                        .in_("blog_post_id", [p["id"] for p in posts])
+                        .execute()
+                    )
                 posted_ids = {row["blog_post_id"] for row in (social.data or [])}
             except Exception as e:
                 print(f"[WARN] Could not check existing Facebook posts: {e}")
@@ -265,7 +334,7 @@ def get_unpublished_to_fb() -> list[dict]:
             post["read_time_min"] = post.get("read_time_min") or post.get("reading_time_minutes")
             post["thumbnail_url"] = post.get("thumbnail_url")
             post["blog_url"] = f"{BLOG_BASE_URL}/blog/{slug}"
-        return posts
+        return posts[:limit]
     except Exception as e:
         print(f"[ERROR] Fetch unpublished: {e}")
         return []

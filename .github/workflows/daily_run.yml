@@ -2,8 +2,10 @@ name: BanglaAIHub — Content Automation
 
 on:
   schedule:
-    # Daily at 09:15 Bangladesh time (03:15 UTC).
+    # 09:15, 15:15, and 21:15 Bangladesh time.
     - cron: "15 3 * * *"
+    - cron: "15 9 * * *"
+    - cron: "15 15 * * *"
   workflow_dispatch:
     inputs:
       posts_per_run:
@@ -82,6 +84,8 @@ jobs:
           FB_LINK_STRATEGY: ${{ vars.FB_LINK_STRATEGY || 'soft' }}
           FB_DIRECT_LINK_EVERY: ${{ vars.FB_DIRECT_LINK_EVERY || '4' }}
           FB_POST_FIRST_COMMENT: ${{ vars.FB_POST_FIRST_COMMENT || 'false' }}
+          FB_POSTS_PER_RUN: ${{ vars.FB_POSTS_PER_RUN || '1' }}
+          FB_MIN_POST_INTERVAL_HOURS: ${{ vars.FB_MIN_POST_INTERVAL_HOURS || '6' }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
