@@ -141,6 +141,16 @@ def _run_facebook_drip(supabase, job_id: int | None, stats: dict) -> None:
                             "Facebook drip posted",
                             {"post_id": post.get("id"), "min_interval_hours": FB_MIN_POST_INTERVAL_HOURS},
                         )
+                    else:
+                        stats["errors"].append(f"Facebook post failed: post_id={post.get('id')}")
+                        print(f"  Facebook post failed for post_id={post.get('id')}")
+                        _log_job(
+                            supabase,
+                            job_id,
+                            "warn",
+                            "Facebook drip post failed",
+                            {"post_id": post.get("id"), "min_interval_hours": FB_MIN_POST_INTERVAL_HOURS},
+                        )
     except Exception as e:
         print(f"  Pending error: {e}")
         stats["errors"].append(f"Pending FB: {e}")

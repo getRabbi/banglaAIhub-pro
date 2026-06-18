@@ -115,6 +115,7 @@ SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
 # ─── Facebook Page API ───
 FB_PAGE_ACCESS_TOKEN = os.getenv("FB_PAGE_ACCESS_TOKEN", "")
 FB_PAGE_ID = os.getenv("FB_PAGE_ID", "")
+FB_GRAPH_API_VERSION = _env("FB_GRAPH_API_VERSION", "v24.0")
 FB_POST_FIRST_COMMENT = _env("FB_POST_FIRST_COMMENT", "false").lower() in {"1", "true", "yes"}
 FB_LINK_STRATEGY = _env("FB_LINK_STRATEGY", "soft").lower()
 FB_DIRECT_LINK_EVERY = max(1, _env_int("FB_DIRECT_LINK_EVERY", 4))

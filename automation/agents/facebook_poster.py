@@ -11,13 +11,14 @@ from agents.image_finder import find_blog_image
 from config import (
     CATEGORIES,
     FB_DIRECT_LINK_EVERY,
+    FB_GRAPH_API_VERSION,
     FB_LINK_STRATEGY,
     FB_PAGE_ACCESS_TOKEN,
     FB_PAGE_ID,
     FB_POST_FIRST_COMMENT,
 )
 
-GRAPH_URL = "https://graph.facebook.com/v19.0"
+GRAPH_URL = f"https://graph.facebook.com/{FB_GRAPH_API_VERSION.strip('/')}"
 
 
 def post_to_facebook(
@@ -44,16 +45,20 @@ def post_to_facebook(
     )
 
     try:
+        fb_post_id = None
         if image_url:
-            fb_post_id = _post_photo(image_url, post_text)
-        else:
+            try:
+                fb_post_id = _post_photo(image_url, post_text)
+            except Exception as e:
+                print(f"[WARN] FB photo post failed, falling back to feed: {_format_request_error(e)}")
+        if not fb_post_id:
             fb_post_id = _post_feed(post_text, blog_url if include_direct_link else "")
         if not fb_post_id:
             print("[ERROR] FB post: no ID")
             return None, None
         print(f"[Facebook] Post: {fb_post_id}")
     except Exception as e:
-        print(f"[ERROR] FB post: {e}")
+        print(f"[ERROR] FB post: {_format_request_error(e)}")
         return None, None
 
     if not FB_POST_FIRST_COMMENT:
@@ -73,7 +78,7 @@ def _post_photo(image_url: str, caption: str) -> str | None:
         },
         timeout=20,
     )
-    resp.raise_for_status()
+    _raise_for_graph_error(resp)
     data = resp.json()
     return data.get("post_id") or data.get("id")
 
@@ -91,8 +96,43 @@ def _post_feed(message: str, blog_url: str = "") -> str | None:
         data=payload,
         timeout=15,
     )
-    resp.raise_for_status()
+    _raise_for_graph_error(resp)
     return resp.json().get("id")
+
+
+def _raise_for_graph_error(resp: requests.Response) -> None:
+    try:
+        resp.raise_for_status()
+    except requests.HTTPError as e:
+        raise requests.HTTPError(_format_graph_error(resp), response=resp) from e
+
+
+def _format_request_error(error: Exception) -> str:
+    response = getattr(error, "response", None)
+    if isinstance(response, requests.Response):
+        return _format_graph_error(response)
+    return str(error)
+
+
+def _format_graph_error(resp: requests.Response) -> str:
+    details: list[str] = [f"HTTP {resp.status_code}"]
+    try:
+        body = resp.json()
+    except ValueError:
+        text = (resp.text or "").strip()
+        if text:
+            details.append(text[:500])
+        return " | ".join(details)
+
+    err = body.get("error") if isinstance(body, dict) else None
+    if isinstance(err, dict):
+        for key in ("message", "type", "code", "error_subcode", "fbtrace_id"):
+            value = err.get(key)
+            if value:
+                details.append(f"{key}={value}")
+    else:
+        details.append(str(body)[:500])
+    return " | ".join(details)
 
 
 def _post_first_comment(fb_post_id: str, bangla_title: str, blog_url: str, category: str) -> str | None:
@@ -112,7 +152,7 @@ def _post_first_comment(fb_post_id: str, bangla_title: str, blog_url: str, categ
             },
             timeout=15,
         )
-        resp.raise_for_status()
+        _raise_for_graph_error(resp)
         fb_comment_id = resp.json().get("id")
         print(f"[Facebook] Comment: {fb_comment_id}")
         return fb_comment_id
