@@ -52,14 +52,38 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          FB_PAGE_ACCESS_TOKEN: ${{ secrets.FB_PAGE_ACCESS_TOKEN }}
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+          FB_GRAPH_API_VERSION: ${{ vars.FB_GRAPH_API_VERSION || 'v24.0' }}
+          FB_POSTS_PER_RUN: ${{ vars.FB_POSTS_PER_RUN || '1' }}
         run: |
           missing=()
           [ -z "${SUPABASE_URL:-$NEXT_PUBLIC_SUPABASE_URL}" ] && missing+=("SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL")
           [ -z "$SUPABASE_SERVICE_KEY" ] && missing+=("SUPABASE_SERVICE_KEY")
+          if [ "${FB_POSTS_PER_RUN:-1}" != "0" ]; then
+            [ -z "$FB_PAGE_ACCESS_TOKEN" ] && missing+=("FB_PAGE_ACCESS_TOKEN")
+            [ -z "$FB_PAGE_ID" ] && missing+=("FB_PAGE_ID")
+          fi
           if [ "${#missing[@]}" -gt 0 ]; then
             echo "::error::Missing required secrets: ${missing[*]}"
             echo "run_pipeline=false" >> "$GITHUB_OUTPUT"
             exit 1
+          fi
+          if [ "${FB_POSTS_PER_RUN:-1}" != "0" ]; then
+            response="$(curl -sS -G "https://graph.facebook.com/${FB_GRAPH_API_VERSION:-v24.0}/${FB_PAGE_ID}" \
+              --data-urlencode "fields=id,name" \
+              --data-urlencode "access_token=${FB_PAGE_ACCESS_TOKEN}" \
+              -w "\n%{http_code}")"
+            http_status="${response##*$'\n'}"
+            body="${response%$'\n'*}"
+            if [ "$http_status" -ge 400 ]; then
+              echo "::error::Facebook token validation failed before automation starts."
+              printf "%s" "$body" | head -c 500
+              echo
+              echo "run_pipeline=false" >> "$GITHUB_OUTPUT"
+              exit 1
+            fi
+            echo "Facebook token validation passed."
           fi
           echo "run_pipeline=true" >> "$GITHUB_OUTPUT"
 
